@@ -1,0 +1,14 @@
+mmap
+open
+close
+read
+rt_sigprocmask
+openat
+write
+fcntl
+munmap
+exit
+socket
+statx
+futex
+madvise

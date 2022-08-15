@@ -1,0 +1,7 @@
+svf/lib/WPA/NodePass.cpp
+svf/include/WPA/NodePass.h
+svf/lib/Util/GlobalContext.cpp
+svf/include/Util/GlobalContext.h
+svf/lib/Util/Options.cpp
+svf/include/Util/Options.h
+svf/tools/CallGraph/svf_callgraph.cpp
