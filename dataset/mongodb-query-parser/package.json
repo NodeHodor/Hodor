@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "mongodb-query-parser": "^1.4.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+     "interfaceUrl": "/http",
+     "requiredParameters": [],
+     "responseParameters": [
+          {
+               "kind": "mock",
+               "rule": "require('child_process').execSync('touch mock2easy-success.txt')"
+          }
+     ]
+}

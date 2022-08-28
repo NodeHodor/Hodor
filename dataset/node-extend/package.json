@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "node-extend": "^0.2.0"
+  }
+}

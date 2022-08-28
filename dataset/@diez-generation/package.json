@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@diez/generation": "^10.5.0"
+  }
+}

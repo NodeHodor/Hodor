@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "mongo-parse": "^2.1.0"
+  }
+}

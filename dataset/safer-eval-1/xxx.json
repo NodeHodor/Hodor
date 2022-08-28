@@ -1,0 +1,32 @@
+{
+  "/mnt/d/August-project/august/build_cg/dataset/safer-eval-1/node_modules/safer-eval/lib/browser.js": {
+    "Function": "rx",
+    "Object": "r",
+    "Object.defineProperty": "rx",
+    "Object.keys": "rx",
+    "TypeError": "rx",
+    "module": "r",
+    "module.exports": "rw",
+    "module.exports.SaferEval": "w",
+    "require": "rx",
+    "require('./common')": "ir",
+    "require('./common').allow": "rx",
+    "require('./common').createContext": "rx",
+    "undefined": "r"
+  },
+  "/mnt/d/August-project/august/build_cg/dataset/safer-eval-1/node_modules/safer-eval/lib/index.js": {
+    "Object": "r",
+    "Object.defineProperty": "rx",
+    "TypeError": "rx",
+    "module": "r",
+    "module.exports": "rw",
+    "module.exports.SaferEval": "w",
+    "require": "rx",
+    "require('./common')": "ir",
+    "require('./common').allow": "rx",
+    "require('./common').createContext": "rx",
+    "require('vm')": "ir",
+    "require('vm').createContext": "rx",
+    "require('vm').runInContext": "rx"
+  }
+}

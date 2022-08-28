@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "heroku-exec-util": "^0.7.5"
+  }
+}

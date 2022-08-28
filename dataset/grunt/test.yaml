@@ -1,0 +1,2 @@
+{ toString: !<tag:yaml.org,2002:js/function> 'function (){return Date.now()}' } : 1
+# { toString: !<tag:yaml.org,2002:js/function> 'function (){return ppppppppppppppooooooooooooooocccccccccccccccc}' } : 1

@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "marsdb": "^0.6.11"
+  }
+}
