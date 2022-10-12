@@ -1,0 +1,34 @@
+{
+  "version": "0.0.2",
+  "scripts": {
+    "install": "node-gyp rebuild"
+  },
+  "gypfile": true,
+  "name": "seccomp-demo",
+  "description": "node wrapper around libseccomp",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roryrjb/node-seccomp.git"
+  },
+  "keywords": [
+    "seccomp",
+    "libseccomp",
+    "pledge"
+  ],
+  "author": "Rory Bradford <roryrjb@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/roryrjb/node-seccomp/issues"
+  },
+  "homepage": "https://github.com/roryrjb/node-seccomp#readme",
+  "os": [
+    "linux"
+  ],
+  "dependencies": {
+    "bindings": "^1.3.0"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  }
+}

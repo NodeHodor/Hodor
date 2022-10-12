@@ -27,6 +27,10 @@ def analysis_ClassDeclaration(self, blck, f=0):
         if (self.scope_id[1], (_name, blck)) not in self.scope_list:
             self.scope_list.append((self.scope_id[1], (_name, blck)))
         self.func_id[(blck["start"], blck["end"])] = f"{_name}@{self.module_name}, {blck['loc']['start']['line']}"
+        self.record_function_table(name=_name, id=(_sid, _key))
+        if blck["superClass"]:
+            p_list = self.analysis_Expression(blck["superClass"], blck["superClass"]["type"], f=1)
+            self.scopes[self.module_name][_sid][_key]["edge"].extend(p_list)
 
         return [(self.module_name, (_sid, (blck["start"], blck["end"])))]
     else:
@@ -57,9 +61,9 @@ def analysis_ClassDeclaration(self, blck, f=0):
                     if (self.scope_id[1], (_key,_value)) not in self.scope_list:
                         self.scope_list.append((self.scope_id[1], (_key,_value)))
                 else:
-                    pass #TODO logging.error("[-] analysis class declaration key is not a identifier! ", _key['type'], self.source_code[self.module_name][_key["start"]:_key["end"]], self.module_name)
+                    pass
             else:
-                pass #TODO logging.error("_block type error")
+                pass
 
 def analysis_FunctionDeclaration(self, block, f=0):
     if f == 0:
@@ -83,12 +87,12 @@ def analysis_FunctionDeclaration(self, block, f=0):
             self.scopes[self.module_name][_key] = dict()
         if (self.scope_id[1], (_name, block)) not in self.scope_list:
             self.scope_list.append((self.scope_id[1], (_name, block)))
-
+        
         self.record_function_table(name=_name, id=(self.scope_id, _key))
         self.func_id[(block["start"], block["end"])] = f"{_name}@{self.module_name}, {block['loc']['start']['line']}"
 
         return [(self.module_name, (_sid, _key))]
-
+        
     else:
         _sid = self.scope_id
         params = block["params"]
@@ -101,16 +105,17 @@ def analysis_FunctionDeclaration(self, block, f=0):
             elif "Statement" in _block["type"]:
                 self.analysis_Statement(_block, _block["type"])
             else:
-                pass #TODO logging.error("[-] analysis function declaration error! ", _block["type"])
+                pass
 
 def analysis_VariableDeclaration(self, blck):
+    source_code = self.get_source_code(self.module_name, blck)
     _sid = self.scope_id
     for declaration in blck["declarations"]:
         if declaration["init"] != None:
             id = declaration["id"]
             init = declaration["init"]
             if init["type"] == "AssignmentExpression":
-                _right = self.analysis_Expression(init, init["type"])
+                _right = self.analysis_Expression(init, init["type"], f=1)
                 if id["type"] == "Identifier":
                         _name = id["name"]
                         _key = (self.scope_id[1], (_name, (id["start"], id["end"])))
@@ -140,10 +145,11 @@ def analysis_VariableDeclaration(self, blck):
                                 if property["value"]["type"] == "Identifier":
                                     _name = property["value"]["name"]
                                     _key = (self.scope_id[1], (_name, (property["value"]["start"], property["value"]["end"])))
+                                    
                                     self.scopes[self.module_name][_sid][_key] = {
                                         "name": _name,
                                         "type": "obj_mem",
-                                        "blck": [(_init, _name), ],
+                                        "blck": [(_init, property["key"]["name"]), ],
                                         "edge": [],
                                         "loc": property["value"]["loc"],
                                         "start": blck["start"],
@@ -169,7 +175,7 @@ def analysis_VariableDeclaration(self, blck):
                                     else:
                                         pass
                                 else:
-                                    pass #TODO logging.error(f"property value type error")
+                                    pass
                         if type(__properties) == tuple:
                             _init = _init[0]
                 elif id["type"] == "ArrayPattern":
@@ -183,6 +189,7 @@ def analysis_VariableDeclaration(self, blck):
                                 if element["type"] == "Identifier":
                                     _name = element["name"]
                                     _key = (self.scope_id[1], (_name, (element["start"], element["end"])))
+                                    
                                     self.scopes[self.module_name][_sid][_key] = {
                                         "name": _name,
                                         "type": "var",
@@ -196,7 +203,7 @@ def analysis_VariableDeclaration(self, blck):
                                 elif element["type"] == "ObjectPattern":
                                     work_list.append(element)
                                 else:
-                                    pass #TODO logging.error("element type error")
+                                    pass
                 else:
                     pass
             else:
@@ -229,10 +236,11 @@ def analysis_VariableDeclaration(self, blck):
                                 if property["value"]["type"] == "Identifier":
                                     _name = property["value"]["name"]
                                     _key = (self.scope_id[1], (_name, (property["value"]["start"], property["value"]["end"])))
+                                    
                                     self.scopes[self.module_name][_sid][_key] = {
                                         "name": _name,
                                         "type": "obj_mem",
-                                        "blck": [(_init, _name), ],
+                                        "blck": [(_init, property["key"]["name"]), ],
                                         "edge": [],
                                         "loc": property["value"]["loc"],
                                         "start": blck["start"],
@@ -258,7 +266,7 @@ def analysis_VariableDeclaration(self, blck):
                                     else:
                                         pass
                                 else:
-                                    pass #TODO logging.error(f"property value type error")
+                                    pass
                         if type(__properties) == tuple:
                             _init = _init[0]
                 elif id["type"] == "ArrayPattern":
@@ -272,6 +280,7 @@ def analysis_VariableDeclaration(self, blck):
                                 if element["type"] == "Identifier":
                                     _name = element["name"]
                                     _key = (self.scope_id[1], (_name, (element["start"], element["end"])))
+                                    
                                     self.scopes[self.module_name][_sid][_key] = {
                                         "name": _name,
                                         "type": "var",
@@ -285,15 +294,14 @@ def analysis_VariableDeclaration(self, blck):
                                 elif element["type"] == "ObjectPattern":
                                     work_list.append(element)
                                 else:
-                                    pass #TODO logging.error("element type error")
+                                    pass
                 else:
-                    pass #TODO logging.error("!!", id["type"], self.module_name, self.source_code[id["start"]:id["end"]], self.source_code[declaration["start"]:declaration["end"]])
+                    pass
         else:
             id = declaration["id"]
             if id["type"] == "Identifier":
                 _name = id["name"]
                 _key = (self.scope_id[1], (_name, (id["start"], id["end"])))
-                #
                 self.scopes[self.module_name][_sid][_key] = {
                     "name": _name,
                     "type": "var",
@@ -305,4 +313,4 @@ def analysis_VariableDeclaration(self, blck):
                     "native": False
                 }
             else:
-                pass #TODO logging.error("declaration id error")
+                pass

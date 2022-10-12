@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "git-pull-or-clone": "^2.0.0"
+  }
+}

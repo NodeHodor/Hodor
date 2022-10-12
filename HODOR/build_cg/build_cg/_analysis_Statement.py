@@ -32,14 +32,16 @@ def analysis_Statement(self, block, type):
     elif type == "EmptyStatement":
         self.analysis_EmptyStatement(block)
     else:
-        pass #TODO logging.error("statement type error")
-
+        pass
+    
 def analysis_BlockStatement(self, block):
     if (self.scope_id[1], ("anonymous", block)) not in self.scope_list:
         self.scope_list.append((self.scope_id[1], ("anonymous", block)))
 
 def analysis_ExpressionStatement(self, block):
     block_source_code = self.get_source_code(self.module_name, block)
+    if 'this.run' in block_source_code:
+        print("herre")
     self.analysis_Expression(block["expression"], block["expression"]["type"])
 
 def analysis_ThrowStatement(self, block):
@@ -50,8 +52,7 @@ def analysis_IfStatement(self, block):
         test_block = block["test"]
         consequent_block = block["consequent"]
         alternate_block = block["alternate"]
-
-
+        
         if "Expression" in test_block["type"]:
             self.analysis_Expression(test_block, test_block["type"])
         elif test_block["type"] == "TemplateLiteral":
@@ -61,7 +62,7 @@ def analysis_IfStatement(self, block):
         elif test_block["type"] == 'MetaProperty':
             pass
         else:
-            pass #TODO logging.error("[-] If Statment test block error! ")
+            pass
 
         if "Statement" in consequent_block["type"]:
             if consequent_block["type"] == "BlockStatement":
@@ -72,15 +73,15 @@ def analysis_IfStatement(self, block):
                     elif "Declaration" in block["type"]:
                         self.analysis_Declaration(block, block["type"])
                     else:
-                        pass #TODO logging.error("if statement type error")
+                        pass
             elif "Statement" in consequent_block["type"]:
                 self.analysis_Statement(consequent_block, consequent_block["type"])
             else:
-                pass #TODO logging.error("[-] If Statment consequent block error! ")
+                pass
         elif "Expression" in consequent_block["type"]:
             self.analysis_Expression(consequent_block, consequent_block["type"])
         else:
-            pass #TODO logging.error("[-] If Statment consequent block error! ")
+            pass
 
         if alternate_block != None:
             if alternate_block["type"] == "BlockStatement":
@@ -91,13 +92,13 @@ def analysis_IfStatement(self, block):
                     elif "Declaration" in block["type"]:
                         self.analysis_Declaration(block, block["type"])
                     else:
-                        pass #TODO logging.error("[-] If Statment alternate block error! ")
+                        pass
             elif "Statement" in alternate_block["type"]:
                 self.analysis_Statement(alternate_block, alternate_block["type"])
             elif "Expression" in alternate_block["type"]:
                 self.analysis_Expression(alternate_block, alternate_block["type"])
             else:
-                pass #TODO logging.error("[-] If Statment alternate block error! ")
+                pass
 
 def analysis_ForStatement(self, block):
     if block["init"]:
@@ -117,13 +118,13 @@ def analysis_ForStatement(self, block):
                                                                         "end": id["end"],
                                                                     }
                 else:
-                    pass #TODO logging.error("id type error")
+                    pass
         elif block["init"]["type"] == "AssignmentExpression":
             left_list = list()
 
             right_expression = block["init"]["right"]
             left_expression = block["init"]["left"]
-
+        
             left_list.append(left_expression)
 
             while right_expression["type"] == "AssignmentExpression":
@@ -146,7 +147,7 @@ def analysis_ForStatement(self, block):
                 else:
                     pass
         else:
-            pass #TODO logging.error("!!", block["init"]["type"])
+            pass
 
     test = block["test"]
     if test:
@@ -167,9 +168,9 @@ def analysis_ForStatement(self, block):
         elif "Expression" in block["body"]["type"]:
             self.analysis_Expression(block["body"], block["body"]["type"])
         else:
-            pass #TODO logging.error("[-] For Statment block error! ")
+            pass
     else:
-        pass #TODO logging.error("[-] For Statment block doesn't hava statement! ")
+        pass
 
 def analysis_ForOfStatement(self, block):
     left = block["left"]
@@ -212,7 +213,7 @@ def analysis_ForOfStatement(self, block):
                                 "loc": property["value"]["loc"],
                                 "start": block["start"],
                                 "end": block["end"],
-                            }
+                            } 
                         elif property["value"]["type"] == "ObjectPattern":
                             work_list.append((property["value"], property["key"]["name"]))
                         elif property["value"]["type"] == "AssignmentPattern":
@@ -233,13 +234,13 @@ def analysis_ForOfStatement(self, block):
                             else:
                                 pass
                         else:
-                            pass #TODO logging.error(f"property value type error")
+                            pass
                     if type(__properties) == tuple:
                         _init = _init[0]
             else:
-                pass #TODO logging.error(f"declaration type error {id['type']}")
+                pass
     else:
-        pass #TODO logging.error(f"[+] for of statement error!")
+        pass
 
     body = block["body"]
     if "Statement" in block["body"]["type"]:
@@ -257,9 +258,9 @@ def analysis_ForOfStatement(self, block):
         elif "Expression" in block["body"]["type"]:
             self.analysis_Expression(block["body"], block["body"]["type"])
         else:
-            pass #TODO logging.error("[-] For Statment block error! ")
+            pass
     else:
-        pass #TODO logging.error("[-] For Statment block doesn't hava statement! ")
+        pass
 
 
 def analysis_TryStatement(self, block):
@@ -272,15 +273,13 @@ def analysis_TryStatement(self, block):
             elif "Declaration" in _block["type"]:
                 self.analysis_Declaration(_block, _block["type"])
             else:
-                pass #TODO logging.error("try statement error")
+                pass
     else:
-        pass #TODO logging.error("[-] Try Statment block error! ")
+        pass
 
     handler = block["handler"]
     if handler:
         param = handler["param"]
-        # if param:
-        #     self.analysis_Expression(param, param["type"])
         if handler["type"] == "CatchClause":
             if handler["body"]["type"] == "BlockStatement":
                 body = handler["body"]
@@ -290,13 +289,13 @@ def analysis_TryStatement(self, block):
                     elif "Declaration" in _block["type"]:
                         self.analysis_Declaration(_block, _block["type"])
                     else:
-                        pass #TODO logging.error("try statement error")
+                        pass
             else:
-                pass #TODO logging.error("[-] Try Statment handler error! ", self.source_code[block["start"]:block["end"]])
+                pass
         else:
-            pass #TODO logging.error("[-] Try Statment handler error! ")
+            pass
 
-
+    
     finalizer = block["finalizer"]
     if finalizer:
         if finalizer["type"] == "BlockStatement":
@@ -307,9 +306,9 @@ def analysis_TryStatement(self, block):
                 elif "Declaration" in _block["type"]:
                     self.analysis_Declaration(_block, _block["type"])
                 else:
-                    pass #TODO logging.error("[-] Try Statment finalizer error! ")
+                    print("[-] Try Statment finalizer error! ")
         else:
-            pass #TODO logging.error("[-] Try Statment finalizer error! ")
+            print("[-] Try Statment finalizer error! ")
 
 def analysis_ReturnStatement(self, block):
     sid = self.scope_id
@@ -325,16 +324,16 @@ def analysis_ReturnStatement(self, block):
                 "end": block["end"]
             }
         else:
-            pass #TODO logging.error("block argument error")
+            pass
 
         if sid[1][0] in self.function_table:
             func_name = sid[1][0]
             if sid in self.function_table[func_name]:
                 self.function_table[func_name][sid]["return"].append((self.module_name, (sid, _key)))
             else:
-                pass #TODO logging.error(f"could not find function table")
+                pass
         else:
-            pass #TODO logging.error(f"could not find function table")
+            pass
     else:
         pass
 
@@ -350,8 +349,8 @@ def analysis_SwitchStatement(self, block):
             elif test["type"] == "Literal" or test["type"] == "Identifier":
                 pass
             else:
-                pass #TODO logging.error("[-] Swicth Statment test error! ")
-
+                pass
+        
         consequent = case["consequent"]
         for i in consequent:
             if "Statement" in i["type"]:
@@ -359,7 +358,7 @@ def analysis_SwitchStatement(self, block):
             elif "Declaration" in i["type"]:
                 self.analysis_Declaration(i, i["type"])
             else:
-                pass #TODO logging.error("[-] Swicth Statment consequent error! ")
+                pass
 
 def analysis_ContinueStatement(self, block):
     pass
@@ -371,7 +370,7 @@ def analysis_WhileStatement(self, block):
     elif test["type"] == "Literal" or test["type"] == "Identifier":
         pass
     else:
-        pass #TODO logging.error("[-] While Statment test error! ")
+        pass
 
     body = block["body"]
     if body["type"] == "BlockStatement":
@@ -381,13 +380,13 @@ def analysis_WhileStatement(self, block):
             elif "Declaration" in block["type"]:
                 self.analysis_Declaration(block, block["type"])
             else:
-                pass #TODO logging.error("[-] While Statment test error! ")
+                pass
     elif body["type"] == "EmptyStatement":
         pass
     elif body["type"] == "ExpressionStatement":
         self.analysis_ExpressionStatement(body)
     else:
-        pass #TODO logging.error("[-] While Statment block error! ")
+        pass
 
 def analysis_BreakStatement(self, block):
     pass
@@ -403,17 +402,17 @@ def analysis_DoWhileStatement(self, block):
             elif "Declaration" in block["type"]:
                 self.analysis_Declaration(block, block["type"])
             else:
-                pass #TODO logging.error("dowhile statement body error")
+                pass
     else:
-        pass #TODO logging.error("[-] Do While Statment block error! ")
+        pass
 
-
+    
     if "Expression" in test["type"]:
         self.analysis_Expression(test, test["type"])
     elif test["type"] == "Literal" or test["type"] == "Identifier":
         pass
     else:
-        pass #TODO logging.error("[-] Do While Statment block error! ")
+        pass
 
 def analysis_ForInStatement(self, block):
     body = block["body"]
@@ -424,9 +423,9 @@ def analysis_ForInStatement(self, block):
             elif "Declaration" in block["type"]:
                 self.analysis_Declaration(block, block["type"])
             else:
-                pass #TODO logging.error("forin statement body error")
+                pass
     else:
-        pass #TODO logging.error("forinstatement body error")
+        pass
 
 def analysis_EmptyStatement(self, block):
     pass

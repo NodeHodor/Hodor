@@ -1,21 +1,28 @@
+from importlib.util import module_for_loader
 import logging
 import json
 import os
 import copy
-from re import L
+from re import L, S
 from sys import builtin_module_names
 import ast
+
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(filename)s [line:%(lineno)d] %(levelname)s %(message)s',
                     datefmt='%Y/%m/%d %H:%M:%S')
+                    
+                    
 
 from subprocess import call
 def shell(cmd, out = None, err = None):
     return call(cmd, shell = True, stdout = out, stderr = err)
 
+
 class build_cg():
-    def __init__(self, dir_path, init_path="", get_exports=False, aim="built-in"):
+    def __init__(self, dir_path, init_path="", get_exports=False, aim="", comp=False):
+        self.comp = comp
+
         self.dir_path = dir_path
         self.init_path = init_path
         self.get_exports = get_exports
@@ -27,35 +34,35 @@ class build_cg():
         self.module_main_mapping = dict()
         self.scope_id = ""
         self.module_name = ""
-        if init_path:
-            self.module_list.append(init_path)
-        else:
-            if os.path.exists(f"{dir_path}/package.json"):
-                with open(f"{dir_path}/package.json", "r") as f_package:
-                    j_package = json.load(f_package)
-                    dependencies = j_package["dependencies"]
-                    for key in dependencies.keys():
-                        module_path = self.calc_module_main_path(key)
-                        self.init_path = module_path
-                        self.module_list.append(module_path)
+        if True:
+            if init_path:
+                self.module_list.append(init_path)
             else:
-                for file in os.listdir(dir_path):
-                    if file.endswith(".js"):
-                        self.init_path = module_path
-                        self.module_list.append(file)
+                if os.path.exists(f"{dir_path}/package.json"):
+                    with open(f"{dir_path}/package.json", "r") as f_package:
+                        j_package = json.load(f_package)
+                        dependencies = j_package["dependencies"]
+                        for key in dependencies.keys():
+                            module_path = self.calc_module_main_path(key)
+                            self.init_path = module_path
+                            self.module_list.append(module_path)
+                else:
+                    for file in os.listdir(dir_path):
+                        if file.endswith(".js"):
+                            self.init_path = module_path
+                            self.module_list.append(file)
 
         self.aim = ""
         if aim:
             self.aim = aim
-
         self.function_table = dict()
         self.module_exports = dict()
 
         self.scope_list = list()
         self.func_node = list()
-        self.scopes = dict()
+        self.scopes = dict() 
         self.tmp_scopes = dict()
-
+    
         self.module_scopeid_stack = list()
         self.calc_require_path_dict = dict()
 
@@ -401,7 +408,7 @@ class build_cg():
              'insertRule',
              'intersectsNode',
              'is',
-            #  'isArray',
+            
              'isDefaultNamespace',
              'isEqualNode',
              'isExtensible',
@@ -457,7 +464,7 @@ class build_cg():
              'prompt',
              'propertyIsEnumerable',
              'prototype',
-            #  'push',
+            
              'putImageData',
              'quadraticCurveTo',
              'queryCommandEnabled',
@@ -641,10 +648,68 @@ class build_cg():
              'webkitResolveLocalFileSystemURL'
         ]
 
-        self.builtins = ['child_process',
+        self.builtins = [
+            'assert',
+            'assert/strict',
+            'async_hooks',
+            'buffer',
+            'child_process',
+            'cluster',
+            'console',
+            'constants',
+            'crypto',
+            'dgram',
+            'diagnostics_channel',
+            'dns',
+            'dns/promises',
+            'domain',
+            'events',
             'fs',
+            'fs/promises',
             'http',
-            'vm']
+            'http2',
+            'https',
+            'inspector',
+            'module',
+            'net',
+            'os',
+            'path',
+            'path/posix',
+            'path/win32',
+            'perf_hooks',
+            'process',
+            'punycode',
+            'querystring',
+            'readline',
+            'readline/promises',
+            'repl',
+            'stream',
+            'stream/consumers',
+            'stream/promises',
+            'stream/web',
+            'string_decoder',
+            'sys',
+            'timers',
+            'timers/promises',
+            'tls',
+            'trace_events',
+            'tty',
+            'url',
+            'util',
+            'util/types',
+            'v8',
+            'vm',
+            'wasi',
+            'worker_threads',
+            'zlib',
+            ]
+
+        self.total_call_mem_expression = list()
+
+        self.analysis_Identifier_dict = dict()
+
+        self.builtin_js = set()
+        self.builtin_node = set()
 
     def calc_path(self, now_path, module_path):
         if self.module_name.startswith("/"):
@@ -654,26 +719,26 @@ class build_cg():
         if module_path.startswith("/"):
             r = os.path.abspath(os.path.join(self.dir_path, module_path[1:])).replace("//", "/")
         else:
-            r = os.path.abspath(os.path.join(self.dir_path, module_path)).replace("//", "/")
+            r = os.path.abspath(os.path.join(self.dir_path, module_path)).replace("//", "/")       
         if not r.endswith(".js"):
             r += ".js"
         if os.path.exists(r):
             if r.startswith(self.dir_path):
                 return r[len(self.dir_path)+1:]
             else:
-                pass #TODO logging.error("calc path error")
+                pass
 
         if module_path.startswith("/"):
             r = os.path.abspath(os.path.join(now_path, module_path[1:])).replace("//", "/")
         else:
-            r = os.path.abspath(os.path.join(now_path, module_path)).replace("//", "/")
+            r = os.path.abspath(os.path.join(now_path, module_path)).replace("//", "/")       
         if os.path.isdir(r):
             r += "/index.js"
             if os.path.exists(r.replace("//", "/")):
                 if r.startswith(self.dir_path):
                     return r[len(self.dir_path)+1:]
                 else:
-                    pass #TODO logging.error("calc path error")
+                    pass
         else:
             if not r.endswith(".js"):
                 r += ".js"
@@ -681,8 +746,8 @@ class build_cg():
                 if r.startswith(self.dir_path):
                     return r[len(self.dir_path)+1:]
                 else:
-                    pass #TODO logging.error("calc path error")
-        pass #TODO logging.error("calc path error")
+                    pass
+        pass
 
     def calc_module_main_path(self, module_name):
         if module_name in self.module_main_mapping:
@@ -694,7 +759,7 @@ class build_cg():
                     with open(f"{self.dir_path}/node_modules/{module_name}/package.json", "r") as f_package:
                         j_package = json.load(f_package)
                         if "main" in j_package:
-                        # if j_package["main"]:
+                        
                             main_path = f"{self.dir_path}/node_modules/{module_name}/{j_package['main']}"
                             if not main_path.endswith(".js"):
                                 main_path = main_path + ".js"
@@ -702,32 +767,36 @@ class build_cg():
                                 self.module_main_mapping[module_name] = main_path
                                 if self.module_main_mapping[module_name].startswith(self.dir_path):
                                     return self.module_main_mapping[module_name][len(self.dir_path)+1:]
-                                # return self.module_main_mapping[module_name]
+                                
                         else:
+                            
                             main_path = f"{self.dir_path}/node_modules/{module_name}/index.js"
                             if os.path.exists(main_path):
+                            
                                 self.module_main_mapping[module_name] = main_path
-                                # return self.module_main_mapping[module_name]
+                                
                                 if self.module_main_mapping[module_name].startswith(self.dir_path):
                                     return self.module_main_mapping[module_name][len(self.dir_path)+1:]
                             else:
-                                pass #TODO logging.error(f"{self.dir_path}/node_modules/{module_name}/index.js not exists")
+                                pass
                 else:
                     if os.path.isdir(_path):
                         main_path = f"{_path}/index.js"
                         if os.path.exists(main_path):
+                        
                             self.module_main_mapping[module_name] = main_path
+                            
                             if self.module_main_mapping[module_name].startswith(self.dir_path):
                                 return self.module_main_mapping[module_name][len(self.dir_path)+1:]
                         else:
-                            pass #TODO logging.error(f"{main_path} error")
+                            pass
                     elif os.path.exists(f"{_path}.js"):
                         main_path = f"{_path}.js"
                         self.module_main_mapping[module_name] = main_path
                         if self.module_main_mapping[module_name].startswith(self.dir_path):
                             return self.module_main_mapping[module_name][len(self.dir_path)+1:]
                     else:
-                        pass #TODO logging.error("still error~")
+                        pass
 
             elif os.path.exists(f"{_path}.js"):
                 main_path = f"{_path}.js"
@@ -735,18 +804,20 @@ class build_cg():
                 if self.module_main_mapping[module_name].startswith(self.dir_path):
                     return self.module_main_mapping[module_name][len(self.dir_path)+1:]
             else:
-                pass #TODO logging.error(f"{self.dir_path}/node_modules/{module_name} not exists")
+                pass
 
     def calc_require_path(self, require_path):
+        
         absModule_path = self.calc_path(now_path=self.module_name, module_path=require_path)
         if absModule_path:
             return absModule_path
         else:
+            
             absModule_path = self.calc_module_main_path(require_path)
             if absModule_path:
                 return absModule_path
             else:
-                pass #TODO logging.error(f"{require_path} error~")
+                pass
 
     def calc_require_pointer(self, module_exports_list, node):
         r = list()
@@ -755,6 +826,7 @@ class build_cg():
             module_exports_p_node_type = module_exports_p_node["type"]
             module_exports_p_node_edge_list = module_exports_p_node["edge"]
             if module_exports_p_node_type == "obj":
+                
                 if module_exports_p[1][1] in self.scopes[module_exports_p[0]]:
                     for obj_node_key in self.scopes[module_exports_p[0]][module_exports_p[1][1]]:
                         if node["type"] == "Identifier":
@@ -762,8 +834,9 @@ class build_cg():
                             if node_name == obj_node_key[1][0]:
                                 r.append((module_exports_p[0], (module_exports_p[1][1], obj_node_key)))
                         else:
-                            pass #TODO logging.error(f"node type error {node['type']}")
+                            pass
                 elif module_exports_p_node_edge_list:
+                    
                     for module_exports_p_node_edge in module_exports_p_node_edge_list:
                         try:
                             r.append(module_exports_p_node_edge)
@@ -774,9 +847,9 @@ class build_cg():
                         except:
                             pass
                 else:
-                    pass #TODO logging.error(f"module_exports_p error~")
+                    pass
             else:
-                pass #TODO logging.error(f"{module_exports_p_node_type} error")
+                pass
         return r
 
     def find_node(self, p_edge_list, node):
@@ -786,11 +859,17 @@ class build_cg():
                 for key in self.scopes[p_edge[0]][p_edge[1][1]]:
                     if key in ["this", "prop"]:
                         for node_key in self.scopes[p_edge[0]][p_edge[1][1]][key]:
-                            if node_key[1][0] == node["name"]:
-                                r_list.append((p_edge[0], (p_edge[1][1], (key, node_key))))
+                            if "name" in node:
+                                if node_key[1][0] == node["name"]:
+                                    r_list.append((p_edge[0], (p_edge[1][1], (key, node_key))))
+                            else:
+                                pass
                     else:
-                        if key[1][0] == node["name"]:
-                            r_list.append((p_edge[0], (p_edge[1][1], key)))
+                        if "name" in node:
+                            if key[1][0] == node["name"]:
+                                r_list.append((p_edge[0], (p_edge[1][1], key)))
+                        else:
+                            pass
             else:
                 pass
         return r_list
@@ -811,36 +890,41 @@ class build_cg():
             }
 
     def get_source_code(self, module_name, block):
+        
+        
+        
         return self.source_code[self.module_name][block["start"]:block["end"]]
 
     def build_nodes(self):
         analysised_module = set()
         while self.module_list:
             module_name = self.module_list.pop()
+            
             if module_name in analysised_module:
                 analysised_module.add(module_name)
                 continue
             self.module_name = module_name
             self.scopes[self.module_name] = dict()
-            # json
-            # source_code
+            
+            
             if not os.path.exists(f"{self.dir_path}/{module_name}"):
-                pass #TODO logging.error(f"file not exist {self.dir_path}/{module_name}")
+                pass
                 continue
-
-            if not os.path.exists(f"/tmp/{module_name}on"):
-                pass #TODO logging.error(f"")
+            
+            # modify the path to the path you are currently in 
+            if not os.path.exists(f"{curent_path}/tmp/{module_name}on"):
+                pass
                 continue
 
             with open(f"{self.dir_path}/{module_name}", encoding='UTF-8') as f_js:
                 self.source_code[module_name] = f_js.read()
-            # ast
-            with open(f"/tmp/{module_name}on", encoding='UTF-8') as f_json:
+            
+            # modify the path to the path you are currently in 
+            with open(f"{curent_path}/tmp/{module_name}on", encoding='UTF-8') as f_json:
                 self.ast[module_name] = json.load(f_json)
 
-
             self.scope_list.append(
-                (("global", (self.ast[self.module_name]["start"],self.ast[self.module_name]["end"])),
+                (("global", (self.ast[self.module_name]["start"],self.ast[self.module_name]["end"])), 
                 ("global", self.ast[self.module_name]))
             )
 
@@ -857,7 +941,7 @@ class build_cg():
                 self.scope_id = (scope[0], (scope[1][0], (scope[1][1]["start"], scope[1][1]["end"])))
                 if self.scope_id not in self.scopes[self.module_name]:
                     self.scopes[self.module_name][self.scope_id] = dict()
-
+                    
                 scope_type = scope[1][1]["type"]
                 if scope_type in ["Program", "BlockStatement"]:
                     body = scope[1][1]["body"]
@@ -867,32 +951,36 @@ class build_cg():
                         elif "Declaration" in block["type"]:
                             self.analysis_Declaration(block, block["type"])
                         else:
-                            pass #TODO logging.error("Program type error")
+                            pass
                 elif "Declaration" in scope_type:
                     if scope_type in ["ClassDeclaration", "FunctionDeclaration"]:
+                        if "main.js" in self.module_name and scope_type == "ClassDeclaration":
+                            pass
                         self.analysis_Declaration(scope[1][1], scope_type, f=1)
                     else:
-                        pass #TODO logging.error("Declaration type error")
+                        pass
                 elif "Expression" in scope_type:
                     if scope_type in ["ClassExpression", "FunctionExpression", "ArrowFunctionExpression", "ObjectExpression"]:
                         self.analysis_Expression(scope[1][1], scope[1][1]["type"], 1)
                     else:
-                        pass #TODO logging.error("Expression type error")
+                        pass
                 else:
-                    pass #TODO logging.error("scope type error")
+                    pass
 
                 del(self.scope_list[0])
                 self.add_intra_edge()
+            self.add_intra_edge()
+            
 
     def analysis_params(self, params):
         _sid = self.scope_id
-        # for param in params:
+        
         func_table_key = ""
         if self.scope_id[1][0] in self.function_table:
             if self.scope_id in self.function_table[self.scope_id[1][0]]:
                 func_table_key = self.function_table[self.scope_id[1][0]][self.scope_id]
         if not func_table_key:
-            pass #TODO logging.error("could not ")
+            pass
 
         for param_num in range(0, len(params)):
             param = params[param_num]
@@ -909,16 +997,17 @@ class build_cg():
                     "end": param["end"],
                     "call": [],
                     "mem": [],
-                    # "asgn": [],
+                    
                     "num": param_num
                 }
                 if func_table_key:
                     func_table_key["params"].append((self.module_name, (_sid, _key)))
                 else:
-                    pass #TODO logging.error("could not ")
+                    pass
             elif param["type"] == "Literal":
                 pass
             elif param["type"] == "AssignmentPattern":
+                
                 left = param["left"]
                 right = param["right"]
                 if left["type"] == "Identifier":
@@ -934,13 +1023,13 @@ class build_cg():
                         "end": left["end"],
                         "call": [],
                         "mem": [],
-                        # "asgn": [],
+                        
                         "num": param_num
                     }
                     if func_table_key:
                         func_table_key["params"].append((self.module_name, (_sid, _key)))
                     else:
-                        pass #TODO logging.error("could")
+                        pass
 
                 elif left["type"] == "ObjectPattern":
                     properties = left["properties"]
@@ -959,15 +1048,15 @@ class build_cg():
                                 "end": left["end"],
                                 "call": [],
                                 "mem": [],
-                                # "asgn": [],
+                                
                                 "num": param_num
                             }
                             if func_table_key:
                                 func_table_key["params"].append((self.module_name, (_sid, _key)))
                         else:
-                            pass #TODO logging.error("[-] Function Declaration param error1", left["type"])
+                            pass
                 else:
-                    pass #TODO logging.error(f"left type error {left['type']}")
+                    pass
             elif param["type"] == "ObjectPattern":
                 properties = param["properties"]
                 for property in properties:
@@ -986,7 +1075,7 @@ class build_cg():
                                 "end": property_key["end"],
                                 "call": [],
                                 "mem": [],
-                                # "asgn": [],
+                                
                                 "num": param_num
                             }
                             if func_table_key:
@@ -994,9 +1083,9 @@ class build_cg():
                         elif property_key["type"] == "Literal":
                             pass
                         else:
-                            pass #TODO logging.error("[-] Function Declaration param error2", property_key["type"])
+                            pass
                     else:
-                        pass #TODO logging.error("ohhhhhhhhhhhhhhno")
+                        pass
             elif param["type"] == "RestElement":
                 argument = param["argument"]
                 if argument["type"] == "Identifier":
@@ -1012,15 +1101,15 @@ class build_cg():
                         "end": argument["end"],
                         "call": [],
                         "mem": [],
-                        # "asgn": [],
+                        
                         "num": param_num
                     }
                     if func_table_key:
                         func_table_key["params"].append((self.module_name, (_sid, _key)))
                 else:
-                    pass #TODO logging.error("[-] Function Declaration param type error3")
-            else:
-                pass #TODO logging.error("[-] Function Declaration params error! ")
+                    pass
+            else:              
+                pass
 
     def analysis_objmem(self, node):
         r_list = list()
@@ -1028,21 +1117,24 @@ class build_cg():
         node_blck = node["blck"]
         for objmem_blck in node_blck:
             property_list = list()
-            while type(objmem_blck) == tuple:
-                property_list.append(objmem_blck[1])
+            while type(objmem_blck) == tuple:     
+                property_list.append(objmem_blck[1])       
                 objmem_blck = objmem_blck[0]
-
+                
             if not node_edge_list and node_blck:
                 node_edge_list.extend(self.analysis_Expression(objmem_blck, objmem_blck["type"], f=1, p=node))
             else:
                 if node_edge_list:
-                    p_list = copy.deepcopy(node_edge_list)
+                    p_list = copy.deepcopy(node_edge_list) 
                     _analysised_p = list()
                     while p_list and property_list:
                         p = p_list.pop()
                         if p in _analysised_p:
                             continue
-                        _analysised_p.append(p)
+                        _analysised_p.append(p)         
+                        if p[0] in self.builtins:
+                            r_list.append(p)     
+                            continue       
                         if p[0] in ["undefined", "primordials", "binding", "internalBinding"]:
                             continue
                         if p[1][1][0] in ["this", "prop"]:
@@ -1074,33 +1166,46 @@ class build_cg():
                                             else:
                                                 r_list.append((p[0], (p[1][1], func_key)))
                         elif p_node_type == "obj":
+                            found = 0
                             if p[1][1] in self.scopes[p[0]]:
                                 _property = property_list.pop()
                                 for obj_key in self.scopes[p[0]][p[1][1]]:
                                     if _property == obj_key[1][0]:
                                         if property_list:
                                             p_list.append((p[0], (p[1][1], obj_key)))
+                                            found = 1
                                         else:
                                             r_list.append((p[0], (p[1][1], obj_key)))
+                                            found = 1
+                                if not found:
+                                    property_list.append(_property)
                             if p_node_edge_list:
                                 p_list.extend(p_node_edge_list)
                         elif p_node_type == "call":
                             if not p_node_edge_list and p_node_blck:
                                 for _blck in p_node_blck:
+                                    self.push_module_scopeid_stack()
+                                    self.module_name = p[0]
+                                    self.scope_id = p[1][0]
                                     p_node_edge_list.extend(self.analysis_Expression(_blck, _blck["type"], f=1, p=p))
+                                    self.pop_module_scopeid_stack()
                             if p_node_edge_list:
                                 p_list.extend(p_node_edge_list)
-
+                            
                         else:
                             pass
                     pass
         return r_list
 
     def add_intra_edge_4_node(self, node):
-        #
+        
         node_type = node["type"]
         node_edge = node["edge"]
         node_blck_s = node["blck"]
+        if "analysised" not in node:
+            node["analysised"] = 1
+        else:
+            return
         tmp_blck_s = list()
         if node_type == "obj_mem":
             for node_blck in node_blck_s:
@@ -1117,6 +1222,8 @@ class build_cg():
             while tmp_blck_s:
                 tmp_blck = tmp_blck_s[0]
                 tmp_blck_type = tmp_blck["type"]
+                
+                
                 if tmp_blck_type in ["BinaryExpression", "Literal", "LogicalExpression", "UnaryExpression", "TaggedTemplateExpression", "UpdateExpression", "AssignmentExpression"]:
                     del(node_blck_s[0])
                     self.analysis_Expression(tmp_blck, tmp_blck["type"])
@@ -1129,6 +1236,8 @@ class build_cg():
                 elif tmp_blck_type in ["CallExpression"]:
                     node_edge.extend(self.analysis_Expression(tmp_blck, tmp_blck["type"]))
                 elif tmp_blck_type in ["MemberExpression"]:
+                    if tmp_blck["start"] == 13855:
+                        pass
                     node_edge.extend(self.analysis_MemberExpression(tmp_blck, tmp_blck["type"]))
                 elif tmp_blck_type in ["Identifier"]:
                     node_edge.extend(self.analysis_Expression(tmp_blck, tmp_blck["type"]))
@@ -1140,18 +1249,20 @@ class build_cg():
                     pass
                 elif tmp_blck_type in ["YieldExpression"]:
                     pass
+                elif tmp_blck_type in ["SequenceExpression"]:
+                    node_edge.extend(self.analysis_Expression(tmp_blck, tmp_blck["type"]))
+                    block_source_code = self.get_source_code(self.module_name, tmp_blck)
+                    pass
                 else:
-                    pass #TODO logging.error(f"tmp blck type error {tmp_blck_type}")
-                del(tmp_blck_s[0])
-
-    def add_intra_edge(self):
-        for scope_id in list(self.scopes[self.module_name].keys()):
+                    pass
+                del(tmp_blck_s[0]) 
+        
+    def add_intra_edge(self, scope_id=None):
+        if scope_id:
             self.scope_id = scope_id
-
             node_id_list = list(self.scopes[self.module_name][scope_id].keys())
             for num in range(0, len(node_id_list)):
                 node_id = node_id_list[num]
-            # for node_id in node_id_list:
                 if node_id == "this" or node_id == "prop":
                     for key in self.scopes[self.module_name][scope_id][node_id]:
                         node = self.scopes[self.module_name][scope_id][node_id][key]
@@ -1163,6 +1274,24 @@ class build_cg():
                     node_type = node["type"]
                     if node_type not in ["call", "new", "mem"]:
                         self.add_intra_edge_4_node(node)
+        else:
+            for scope_id in list(self.scopes[self.module_name].keys()):
+                self.scope_id = scope_id
+
+                node_id_list = list(self.scopes[self.module_name][scope_id].keys())
+                for num in range(0, len(node_id_list)):
+                    node_id = node_id_list[num]
+                    if node_id == "this" or node_id == "prop":
+                        for key in self.scopes[self.module_name][scope_id][node_id]:
+                            node = self.scopes[self.module_name][scope_id][node_id][key]
+                            node_type = node["type"]
+                            if node_type not in ["call", "new", "mem"]:
+                                self.add_intra_edge_4_node(node)
+                    else:
+                        node = self.scopes[self.module_name][scope_id][node_id]
+                        node_type = node["type"]
+                        if node_type not in ["call", "new", "mem"]:
+                            self.add_intra_edge_4_node(node)
 
     def push_module_scopeid_stack(self):
         self.module_scopeid_stack.append(self.module_name)
@@ -1174,6 +1303,7 @@ class build_cg():
 
     def add_inter_edge(self):
         while self.tmp_scopes != self.scopes:
+            
             self.tmp_scopes = copy.deepcopy(self.scopes)
             for self.module_name in self.tmp_scopes:
                 for self.scope_id in self.tmp_scopes[self.module_name]:
@@ -1189,7 +1319,8 @@ class build_cg():
                                         for blck in node_blck:
                                             self.push_module_scopeid_stack()
                                             r_list = self.analysis_Expression(blck, blck["type"], f=1, p=(self.module_name, (self.scope_id, (key, _key))))
-                                            node_edge.extend(r_list)
+                                            if r_list:
+                                                node_edge.extend(r_list)
                                             self.pop_module_scopeid_stack()
                         else:
                             node = self.scopes[self.module_name][self.scope_id][key]
@@ -1201,17 +1332,87 @@ class build_cg():
                                     for blck in node_blck:
                                         self.push_module_scopeid_stack()
                                         r_list = self.analysis_Expression(blck, blck["type"], f=1, p=(self.module_name, (self.scope_id, key)))
-                                        node_edge.extend(r_list)
+                                        if r_list:
+                                            node_edge.extend(r_list)
                                         self.pop_module_scopeid_stack()
+            for key in self.scopes:
+                for _sid in self.scopes[key]:
+                    if _sid not in self.tmp_scopes[key]:
+                        pass
+                    else:
+                        if self.scopes[key][_sid] != self.tmp_scopes[key][_sid]:
+                            for node in self.scopes[key][_sid]:
+                                if node not in self.tmp_scopes[key][_sid]:
+                                    pass
+                                else:
+                                    if self.scopes[key][_sid][node] != self.tmp_scopes[key][_sid][node]:
+                                        pass
+
+    def statistic_builtin(self, module_name, sour_node, dest_node, edge):
+        
+        _sour_code = self.get_source_code(module_name, sour_node)
+        if "Promise(" in _sour_code or \
+            ".then(" in _sour_code or \
+            ".all(" in _sour_code or \
+            ".allSettled(" in _sour_code or \
+            ".any(" in _sour_code or \
+            ".catch(" in _sour_code or \
+            ".finally(" in _sour_code or \
+            ".race(" in _sour_code or \
+            ".reject(" in _sour_code or \
+            ".resolve(" in _sour_code or \
+            ".forEach(" in _sour_code or \
+            ".map(" in _sour_code:
+            self.builtin_js.add(edge)
+
+        if ".access(" in _sour_code or \
+            ".close(" in _sour_code or \
+            ".stat(" in _sour_code or \
+            ".lstat(" in _sour_code or \
+            ".fstat(" in _sour_code or \
+            ".readlink(" in _sour_code or \
+            ".ftruncate(" in _sour_code or \
+            ".fdatesync(" in _sour_code or \
+            ".fsync(" in _sour_code or \
+            ".unlink(" in _sour_code or \
+            ".rmdir(" in _sour_code or \
+            ".mkdir(" in _sour_code or \
+            ".realpath(" in _sour_code or \
+            ".readdir(" in _sour_code or \
+            ".open(" in _sour_code or \
+            ".openfilehandle(" in _sour_code or \
+            ".writebuffer(" in _sour_code or \
+            ".writeBuffers(" in _sour_code or \
+            ".read(" in _sour_code or \
+            ".readbuffers(" in _sour_code or \
+            ".chmod(" in _sour_code or \
+            ".fchmod(" in _sour_code or \
+            ".chown(" in _sour_code or \
+            ".fchown(" in _sour_code or \
+            ".lchown(" in _sour_code or \
+            ".utimes(" in _sour_code or \
+            ".futimes(" in _sour_code or \
+            ".lutimes(" in _sour_code or \
+            ".mkdtemp(" in _sour_code or \
+            ".getaddrinfo(" in _sour_code or \
+            ".getnameinfo(" in _sour_code:
+            self.builtin_node.add(edge)
+
+        
+        if "func" in dest_node or "obj" in dest_node:
+            self.builtin_js.add(edge)
+        
 
     def build_builtin_module_method(self, builtin_module_method):
         r = ""
         if builtin_module_method[-1]:
             module = builtin_module_method[0]
             r = f"@{module}"
-            for method in builtin_module_method[1:]:
-                if method not in self.native_methods:
-                    r = f"{method}{r}"
+            if len(builtin_module_method) > 1:
+                r = f"{builtin_module_method[1]}{r}"
+            
+                
+                
         return r
 
     def build_cg(self):
@@ -1224,51 +1425,57 @@ class build_cg():
                             _node_type = _node["type"]
                             _node_edge_list = _node["edge"]
                             if _node_type in ["call", "mem", "new"]:
+                                
                                 if type(node_key[0]) == str:
                                     continue
 
                                 if node_key[0][1] not in self.func_id:
                                     continue
-                                _sour = f"{self.func_id[node_key[0][1]]}"
-                                if _sour.startswith("global"):
-                                    if module_name not in self.callgraph["global_call"]:
-                                        self.callgraph["global_call"][module_name] = list()
-                                    self.callgraph["global_call"][module_name].append(_sour)
-
-                                if "arguments_key" in _node:
-                                    node_argument_p_dict = _node["arguments_key"]["id"]
-                                    for key in node_argument_p_dict:
-                                        node_argument_p_list = node_argument_p_dict[key]
-                                        for node_argument_p in node_argument_p_list:
-                                            node_argument_list = list()
-                                            node_argument_list.append(node_argument_p)
-                                            while node_argument_list:
-                                                _node_argument_p = node_argument_list.pop()
-                                                if _node_argument_p[1][1][0] in ["prop", "this"]:
-                                                    _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1][0]][_node_argument_p[1][1][1]]
-                                                else:
-                                                    _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1]]
-                                                node_argument_type = _node_argument["type"]
-                                                if node_argument_type == "func":
-                                                    if _node_argument_p[1][1][0] == "prop" or _node_argument_p[1][1][0] == "this":
-                                                        _edge_scope = _node_edge[1][1][1][1][1]
+                                        
+                                if not self.comp:
+                                    _sour = f"{self.func_id[node_key[0][1]]}"
+                                    if _sour.startswith("global"):
+                                        if module_name not in self.callgraph["global_call"]:
+                                            self.callgraph["global_call"][module_name] = list()
+                                        self.callgraph["global_call"][module_name].append(_sour)
+                                else:
+                                    _sour = f"{_node['name']}@{module_name}, {_node['loc']['start']['line']}"
+                                if not self.comp:
+                                    if "arguments_key" in _node:
+                                        node_argument_p_dict = _node["arguments_key"]["id"]
+                                        for key in node_argument_p_dict:
+                                            node_argument_p_list = node_argument_p_dict[key]
+                                            for node_argument_p in node_argument_p_list:
+                                                node_argument_list = list()
+                                                node_argument_list.append(node_argument_p)
+                                                while node_argument_list:
+                                                    _node_argument_p = node_argument_list.pop()
+                                                    if _node_argument_p[1][1][0] in ["prop", "this"]:
+                                                        _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1][0]][_node_argument_p[1][1][1]]
                                                     else:
-                                                        _edge_scope = _node_argument_p[1][1][1][1]
-                                                    if _edge_scope in self.func_id:
-                                                        _dest = f"{self.func_id[_edge_scope]}"
-                                                        self.callgraph["node"].add(_sour)
-                                                        self.callgraph["node"].add(_dest)
-                                                        if _sour not in self.callgraph["edge"]:
-                                                            self.callgraph["edge"][_sour] = set()
-                                                        self.callgraph["edge"][_sour].add(_dest)
-                                                elif node_argument_type == "obj":
-                                                    pass
-                                                    # to-do
+                                                        _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1]]
+                                                    node_argument_type = _node_argument["type"]
+                                                    if node_argument_type == "func":
+                                                        if _node_argument_p[1][1][0] == "prop" or _node_argument_p[1][1][0] == "this":
+                                                            _edge_scope = _node_edge[1][1][1][1][1]
+                                                        else:
+                                                            _edge_scope = _node_argument_p[1][1][1][1]
+                                                        if _edge_scope in self.func_id:
+                                                            _dest = f"{self.func_id[_edge_scope]}"
+                                                            self.callgraph["node"].add(_sour)
+                                                            self.callgraph["node"].add(_dest)
+                                                            if _sour not in self.callgraph["edge"]:
+                                                                self.callgraph["edge"][_sour] = set()
+                                                            self.callgraph["edge"][_sour].add(_dest)
+                                                            _edge = f"{_sour} -> {_dest}"
+                                                            self.statistic_builtin(module_name, _node, _node_argument, _edge)
+                                                    elif node_argument_type == "obj":
+                                                        pass
 
                                 for _node_edge in _node_edge_list:
                                     if _node_edge[0] == "internalBinding":
                                         continue
-
+                                    
                                     if self.aim == "built-in":
                                         if _node_edge[0] in self.built_in_list:
                                             _dest = self.build_builtin_module_method(_node_edge)
@@ -1295,87 +1502,111 @@ class build_cg():
                                             if _sour not in self.callgraph["edge"]:
                                                 self.callgraph["edge"][_sour] = set()
                                             self.callgraph["edge"][_sour].add(_dest)
-
+                                            _edge = f"{_sour} -> {_dest}"
+                                            self.statistic_builtin(module_name, _node, _edge_node, _edge)
                                         else:
-                                            pass #TODO logging.error("func_scope not in func_id")
+                                            pass
                                     else:
-                                        # pass #TODO logging.error(f"{_edge_node_type} type error")
+                                        
                                         pass
                     else:
                         _node = self.scopes[module_name][sid][node_key]
                         _node_type = _node["type"]
                         _node_edge_list = _node["edge"]
                         if _node_type in ["call", "mem", "new"]:
-
                             self.module_name = module_name
-                            source_code = self.get_source_code(module_name, _node)
-
+                            
                             if type(node_key[0]) == str:
                                 continue
 
                             if node_key[0][1] not in self.func_id:
                                 continue
-                            _sour = f"{self.func_id[node_key[0][1]]}"
-                            if _sour.startswith("global"):
-                                if module_name not in self.callgraph["global_call"]:
-                                    self.callgraph["global_call"][module_name] = list()
-                                self.callgraph["global_call"][module_name].append(_sour)
 
-
-                            if "arguments_key" in _node:
-                                node_argument_p_dict = _node["arguments_key"]["id"]
-                                for key in node_argument_p_dict:
-                                    node_argument_p_list = node_argument_p_dict[key]
-                                    for node_argument_p in node_argument_p_list:
-                                        if node_argument_p[1][1][0] in ["prop", "this"]:
-                                            node_argument = self.scopes[node_argument_p[0]][node_argument_p[1][0]][node_argument_p[1][1][0]][node_argument_p[1][1][1]]
-                                        else:
-                                            node_argument = self.scopes[node_argument_p[0]][node_argument_p[1][0]][node_argument_p[1][1]]
-                                        node_argument_edge_list = node_argument["edge"]
-                                        if node_argument_edge_list:
-                                            p_list = list()
-                                            p_list.extend(node_argument_edge_list)
-                                            while p_list:
-                                                _node_argument_p = p_list.pop()
-                                                if _node_argument_p[0] in ["undefined", "primordials", "binding"]:
-                                                    continue
-
-                                                if _node_argument_p[0] in self.builtins:
-                                                    _dest = self.build_builtin_module_method(_node_argument_p)
-                                                    if _sour not in self.callgraph["edge"]:
-                                                        self.callgraph["edge"][_sour] = set()
-                                                    self.callgraph["edge"][_sour].add(_dest)
-                                                    continue
-                                                if _node_argument_p[1][1][0] in ["prop", "this"]:
-                                                    _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1][0]][_node_argument_p[1][1][1]]
-                                                else:
-                                                    _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1]]
-                                                _node_argument_type = _node_argument["type"]
-                                                if _node_argument_type == "func":
-                                                    if _node_argument_p[1][1][0] == "prop" or _node_argument_p[1][1][0] == "this":
-                                                        _edge_scope = _node_argument_p[1][1][1][1][1]
-                                                    else:
-                                                        _edge_scope = _node_argument_p[1][1][1][1]
-                                                    if _edge_scope in self.func_id:
-                                                        _dest = f"{self.func_id[_edge_scope]}"
-                                                        self.callgraph["node"].add(_sour)
-                                                        self.callgraph["node"].add(_dest)
+                            if not self.comp:
+                                _sour = f"{self.func_id[node_key[0][1]]}"
+                                if _sour.startswith("global"):
+                                    if module_name not in self.callgraph["global_call"]:
+                                        self.callgraph["global_call"][module_name] = list()
+                                    self.callgraph["global_call"][module_name].append(_sour)
+                            else:
+                                _sour = f"{_node['name']}@{module_name}, {_node['loc']['start']['line']}"
+                            if not self.comp:
+                                if "arguments_key" in _node:
+                                    node_argument_p_dict = _node["arguments_key"]["id"]
+                                    for key in node_argument_p_dict:
+                                        node_argument_p_list = node_argument_p_dict[key]
+                                        for node_argument_p in node_argument_p_list:
+                                            if node_argument_p[1][1][0] in ["prop", "this"]:
+                                                node_argument = self.scopes[node_argument_p[0]][node_argument_p[1][0]][node_argument_p[1][1][0]][node_argument_p[1][1][1]]
+                                            else:
+                                                node_argument = self.scopes[node_argument_p[0]][node_argument_p[1][0]][node_argument_p[1][1]]
+                                            node_argument_edge_list = node_argument["edge"]
+                                            if node_argument_edge_list:
+                                                p_list = list()
+                                                p_list.extend(node_argument_edge_list)
+                                                analysised_p_set = set()
+                                                while p_list:
+                                                    _node_argument_p = p_list.pop()
+                                                    if _node_argument_p in analysised_p_set:
+                                                        continue
+                                                    analysised_p_set.add(_node_argument_p)
+                                                    if _node_argument_p[0] in ["undefined", "primordials", "binding"]:
+                                                        continue
+                                                    
+                                                    if _node_argument_p[0] in self.builtins:
+                                                        _dest = self.build_builtin_module_method(_node_argument_p)
                                                         if _sour not in self.callgraph["edge"]:
                                                             self.callgraph["edge"][_sour] = set()
                                                         self.callgraph["edge"][_sour].add(_dest)
-                                                elif _node_argument_type == "obj":
-                                                    if _node_argument_p[1][1] in self.scopes[_node_argument_p[0]]:
-                                                        for _key in self.scopes[_node_argument_p[0]][_node_argument_p[1][1]]:
-                                                            _obj_node = self.scopes[_node_argument_p[0]][_node_argument_p[1][1]][_key]
-                                                            p_list.extend(_obj_node["edge"])
+                                                        continue
+                                                    if _node_argument_p[0] == "internalBinding":
+                                                        _dest = self.build_builtin_module_method(_node_argument_p)
+                                                        if _sour not in self.callgraph["edge"]:
+                                                            self.callgraph["edge"][_sour] = set()
+                                                        self.callgraph["edge"][_sour].add(_dest)
+                                                        continue
+                                                    if _node_argument_p[-1] in ["func", "obj"]:
+                                                        _node_argument_builtin = _node_argument_p[-1]
+                                                        _node_argument_p = _node_argument_p[0]
+                                                        if _node_argument_p[1][1][0] in ["prop", "this"]:
+                                                            _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1][0]][_node_argument_p[1][1][1]]
+                                                        else:                                                   
+                                                            _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1]]
+                                                        _node_argument[_node_argument_builtin] = True
                                                     else:
-                                                        p_list.extend(_node_argument["edge"])
+                                                        if _node_argument_p[1][1][0] in ["prop", "this"]:
+                                                            _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1][0]][_node_argument_p[1][1][1]]
+                                                        else:                                                   
+                                                            _node_argument = self.scopes[_node_argument_p[0]][_node_argument_p[1][0]][_node_argument_p[1][1]]
+                                                    
+                                                    _node_argument_type = _node_argument["type"]
+                                                    if _node_argument_type == "func":
+                                                        if _node_argument_p[1][1][0] == "prop" or _node_argument_p[1][1][0] == "this":
+                                                            _edge_scope = _node_argument_p[1][1][1][1][1]
+                                                        else:
+                                                            _edge_scope = _node_argument_p[1][1][1][1]
+                                                        if _edge_scope in self.func_id:
+                                                            _dest = f"{self.func_id[_edge_scope]}"
+                                                            self.callgraph["node"].add(_sour)
+                                                            self.callgraph["node"].add(_dest)
+                                                            if _sour not in self.callgraph["edge"]:
+                                                                self.callgraph["edge"][_sour] = set()
+                                                            self.callgraph["edge"][_sour].add(_dest)
+                                                            _edge = f"{_sour} -> {_dest}"
+                                                            self.statistic_builtin(module_name, _node, _node_argument, _edge)
+                                                    elif _node_argument_type == "obj":
+                                                        if _node_argument_p[1][1] in self.scopes[_node_argument_p[0]]:
+                                                            for _key in self.scopes[_node_argument_p[0]][_node_argument_p[1][1]]:
+                                                                _obj_node = self.scopes[_node_argument_p[0]][_node_argument_p[1][1]][_key]
+                                                                p_list.extend(_obj_node["edge"])
+                                                        else:
+                                                            p_list.extend(_node_argument["edge"])
 
 
                             for _node_edge in _node_edge_list:
                                 if _node_edge[0] == "internalBinding":
                                     continue
-
+                                
                                 if _node_edge[0] in ["undefined", "primordials", "binding"]:
                                     continue
 
@@ -1385,8 +1616,7 @@ class build_cg():
                                         if _sour not in self.callgraph["edge"]:
                                             self.callgraph["edge"][_sour] = set()
                                         self.callgraph["edge"][_sour].add(_dest)
-                                        continue
-
+                                
                                 if _node_edge[1][1][0] in ["prop", "this"]:
                                     _edge_node = self.scopes[_node_edge[0]][_node_edge[1][0]][_node_edge[1][1][0]][_node_edge[1][1][1]]
                                 else:
@@ -1405,12 +1635,73 @@ class build_cg():
                                         if _sour not in self.callgraph["edge"]:
                                             self.callgraph["edge"][_sour] = set()
                                         self.callgraph["edge"][_sour].add(_dest)
+                                        _edge = f"{_sour} -> {_dest}"
+                                        self.statistic_builtin(module_name, _node, _edge_node, _edge)
                                     else:
-                                        pass #TODO logging.error("func_scope not in func_id")
-                                else:
-                                    # pass #TODO logging.error(f"{_edge_node_type} type error")
-                                    pass
+                                        pass
+                                if _edge_node_type == "class":
+                                    if _node_edge[1][1] in self.scopes[_node_edge[0]]:
+                                        for _class_key in self.scopes[_node_edge[0]][_node_edge[1][1]]:
+                                            if _class_key[1][0] == "constructor":
+                                                if self.scopes[_node_edge[0]][_node_edge[1][1]][_class_key]["type"] == "func":
+                                                    _edge_scope = _class_key[1][1]
+                                                    if _edge_scope in self.func_id:
+                                                        _dest = f"{self.func_id[_edge_scope]}"
+                                                        self.callgraph["node"].add(_sour)
+                                                        self.callgraph["node"].add(_dest)
+                                                        if _sour not in self.callgraph["edge"]:
+                                                            self.callgraph["edge"][_sour] = set()
+                                                        self.callgraph["edge"][_sour].add(_dest)
+                                                        _edge = f"{_sour} -> {_dest}"
+                                                        self.statistic_builtin(module_name, _node, _edge_node, _edge)
+                                                pass
+                                elif _edge_node_type == "var":
+                                    if _edge_edge_list:
+                                        for _edge_edge in _edge_edge_list:
+                                            if _edge_edge[0] in ["undefined", "primordials", "binding"]:
+                                                continue
+                                            if _edge_edge[0] in self.builtins:
+                                                _dest = self.build_builtin_module_method(_edge_edge)
+                                                if _sour not in self.callgraph["edge"]:
+                                                    self.callgraph["edge"][_sour] = set()
+                                                self.callgraph["edge"][_sour].add(_dest)
+                                                continue
+                                            if _edge_edge[-1] in ["func", "obj"]:
+                                                _type = _edge_edge[-1]
+                                                _edge_edge = _edge_edge[0]
+                                                if _edge_edge[-1] in ["func", "obj"]:
+                                                    continue
+                                                if _edge_edge[1][1][0] in ["prop", "this"]:
+                                                    _edge_edge_node = self.scopes[_edge_edge[0]][_edge_edge[1][0]][_edge_edge[1][1][0]][_edge_edge[1][1][1]]
+                                                else:
+                                                    _edge_edge_node = self.scopes[_edge_edge[0]][_edge_edge[1][0]][_edge_edge[1][1]]
+                                                _edge_edge_node[_type] = True
+                                            else:
+                                                if _edge_edge[1][1][0] in ["prop", "this"]:
+                                                    _edge_edge_node = self.scopes[_edge_edge[0]][_edge_edge[1][0]][_edge_edge[1][1][0]][_edge_edge[1][1][1]]
+                                                else:
+                                                    
+                                                    _edge_edge_node = self.scopes[_edge_edge[0]][_edge_edge[1][0]][_edge_edge[1][1]]
+                                            if _edge_edge_node["type"] == "func":
+                                                if _edge_edge[1][1][0] == "prop" or _edge_edge[1][1][0] == "this":
+                                                    _edge_scope = _edge_edge[1][1][1][1][1]
+                                                else:
+                                                    _edge_scope = _edge_edge[1][1][1][1]
+                                                if _edge_scope in self.func_id:
+                                                    _dest = f"{self.func_id[_edge_scope]}"
+                                                    self.callgraph["node"].add(_sour)
+                                                    self.callgraph["node"].add(_dest)
+                                                    if _sour not in self.callgraph["edge"]:
+                                                        self.callgraph["edge"][_sour] = set()
+                                                    self.callgraph["edge"][_sour].add(_dest)
+                                                    _edge = f"{_sour} -> {_dest}"
+                                                    self.statistic_builtin(module_name, _node, _edge_edge_node, _edge)
 
+                                                else:
+                                                    pass
+                                else:
+                                    
+                                    pass
 
     def tranverse_cg(self, node):
         work_list = [node,]
@@ -1435,7 +1726,6 @@ class build_cg():
                             analysis_ed.add(_des)
         return native_resuilt
 
-
     def get_built_in(self):
         built_in_list = list()
         if self.init_path:
@@ -1445,6 +1735,7 @@ class build_cg():
                         exports_edge_node = self.scopes[exports_edge[0]][exports_edge[1][0]][exports_edge[1][1][0]][exports_edge[1][1][1]]
                     else:
                         exports_edge_node = self.scopes[exports_edge[0]][exports_edge[1][0]][exports_edge[1][1]]
+                    
                     exports_edge_node_edge_list = exports_edge_node["edge"]
                     for exports_edge_node_edge in exports_edge_node_edge_list:
                         if exports_edge_node_edge[1][1][0] in ["prop", "this"]:
@@ -1459,6 +1750,7 @@ class build_cg():
                             built_in_list.extend(_result)
                         else:
                             pass
+                
             else:
                 module_name = self.init_path
                 for scope_id in self.scopes[module_name]:
@@ -1480,6 +1772,16 @@ class build_cg():
                                             _sour = f"{self.func_id[exports_edge_node_edge[1][1][1][1]]}"
                                             _result = self.tranverse_cg(_sour)
                                             built_in_list.extend(_result)
+                                        if _node_type in "class":
+                                            if node_edge[1][1] in self.scopes[node_edge[0]]:
+                                                for _class_key in self.scopes[node_edge[0]][node_edge[1][1]]:
+                                                    if _class_key[1][0] == "constructor":
+                                                        if self.scopes[node_edge[0]][node_edge[1][1]][_class_key]["type"] == "func":
+                                                            _sour = f"{self.func_id[_class_key[1][1]]}"
+                                                            _result = self.tranverse_cg(_sour)
+                                                            built_in_list.extend(_result)
+                                        else:
+                                            pass
                         else:
                             node = self.scopes[module_name][scope_id][key]
                             node_type = node["type"]
@@ -1494,15 +1796,24 @@ class build_cg():
                                         exports_edge_node = self.scopes[node_edge[0]][node_edge[1][0]][node_edge[1][1]]
                                     _node = exports_edge_node
                                     _node_type = _node["type"]
-                                    if _node_type == "func":
+                                    if _node_type in ["func", "class"]:
                                         _sour = f"{self.func_id[node_edge[1][1][1][1]]}"
                                         _result = self.tranverse_cg(_sour)
                                         built_in_list.extend(_result)
+                                    if _node_type in "class":
+                                        if node_edge[1][1] in self.scopes[node_edge[0]]:
+                                            for _class_key in self.scopes[node_edge[0]][node_edge[1][1]]:
+                                                if _class_key[1][0] == "constructor":
+                                                    if self.scopes[node_edge[0]][node_edge[1][1]][_class_key]["type"] == "func":
+                                                        _sour = f"{self.func_id[_class_key[1][1]]}"
+                                                        _result = self.tranverse_cg(_sour)
+                                                        built_in_list.extend(_result)
                                     else:
                                         pass
-                                        # to-do
+        
+        else:
+            pass
         return built_in_list
-
 
     from ._analysis_Declaration import analysis_Declaration, \
         analysis_VariableDeclaration, \
@@ -1549,7 +1860,8 @@ class build_cg():
         analysis_TemplateLiteral, \
         record_MemberExpression, \
         assignment_memberexpression, \
-        analysis_memberexpression_pointer
-        # analysis_objmem
+        analysis_memberexpression_pointer, \
+        analysis_SequenceExpression, \
+        analysis_object, \
+        analysis_func
 
-        # check_MemberExpression, \
