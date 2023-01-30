@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "mc-kill-port": "^1.0.1"
+  }
+}

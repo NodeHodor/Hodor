@@ -1,0 +1,29 @@
+{
+    "name": "{{name}}",
+    "title": "{{title}}",
+    "description": "{{description}}",
+    "version": "{{version}}",
+    "homepage": "{{homepage}}",
+    "demo": "{{demo}}",
+    "docs": "{{docs}}",
+    "author": {
+        "name": "{{author_name}}",
+        "email": "{{author_email}}",
+        "url": "{{author_url}}"
+    },
+    "repository": {
+        "type": "git",
+        "url": "{{repository}}"
+    },
+    "bugs": "{{bugs}}",
+    "dependencies": {
+        "jquery": "{{jquery_version}}"
+    },
+    "keywords": [{{keywords}}],
+    "licenses": [
+        {
+          "type": "{{license_type}}",
+          "url": "{{license_url}}"
+        }
+    ]
+}

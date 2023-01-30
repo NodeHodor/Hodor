@@ -1,0 +1,14 @@
+@import "base.css";
+
+#foo {
+    background: url('../img/icon.png?datauri') no-repeat;
+    height: 24px;
+    width: 24px
+}
+
+#bar {
+    background: url('../img/icon.png?url-prepend=http://cdn2.qq.com') no-repeat;
+    height: 24px;
+    width: 24px
+}
+

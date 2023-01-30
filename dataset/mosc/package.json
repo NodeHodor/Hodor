@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "chai": "^4.3.7",
     "mosc": "^1.0.0"
   }
 }

@@ -1,0 +1,482 @@
+{
+    "Buffer@buffer": [
+        "bindingFill@buffer",
+        "setHiddenValue@util",
+        "createFromString@buffer",
+        "getZeroFillToggle@buffer"
+    ],
+    "SlowBuffer@buffer": [
+        "getZeroFillToggle@buffer"
+    ],
+    "btoa@buffer": [
+        "setHiddenValue@util",
+        "createFromString@buffer",
+        "getZeroFillToggle@buffer"
+    ],
+    "_forkChild@child_process": [
+        "Pipe@pipe_wrap"
+    ],
+    "exec@child_process": [
+        "close@process_wrap",
+        "Process@process_wrap",
+        "scheduleTimer@timers",
+        "spawn@process_wrap"
+    ],
+    "execFile@child_process": [
+        "close@process_wrap",
+        "Process@process_wrap",
+        "scheduleTimer@timers",
+        "spawn@process_wrap"
+    ],
+    "execFileSync@child_process": [
+        "spawn@spawn_sync"
+    ],
+    "execSync@child_process": [
+        "spawn@spawn_sync"
+    ],
+    "createWriteStream@fs":[
+        "writeString@fs",
+        "writeBuffer@fs"
+    ],
+    "fork@child_process": [
+        "close@process_wrap",
+        "Process@process_wrap",
+        "scheduleTimer@timers",
+        "spawn@process_wrap"
+    ],
+    "spawn@child_process": [
+        "close@process_wrap",
+        "Process@process_wrap",
+        "scheduleTimer@timers",
+        "spawn@process_wrap"
+    ],
+    "spawnSync@child_process": [
+        "spawn@spawn_sync"
+    ],
+    "createDiffieHellman@crypto": [
+        "_DiffieHellman@crypto"
+    ],
+    "createDiffieHellmanGroup@crypto": [
+        "_DiffieHellmanGroup@crypto"
+    ],
+    "createECDH@crypto": [
+        "_ECDH@crypto"
+    ],
+    "createHash@crypto": [
+        "_Hash@crypto"
+    ],
+    "createHmac@crypto": [
+        "createNativeKeyObjectClass@crypto",
+        "_Hmac@crypto",
+        "init@crypto"
+    ],
+    "createSign@crypto": [
+        "_Sign@crypto",
+        "init@crypto"
+    ],
+    "createVerify@crypto": [
+        "_Verify@crypto",
+        "init@crypto"
+    ],
+    "getFips@crypto": [
+        "getFipsCrypto@crypto"
+    ],
+    "setFips@crypto": [
+        "getCLIOptions@options",
+        "setFipsCrypto@crypto"
+    ],
+    "createSocket@dgram": [
+        "UDP@udp_wrap"
+    ],
+    "Socket@dgram": [
+        "UDP@udp_wrap"
+    ],
+    "lookup@dns": [
+        "ChannelWrap@cares_wrap",
+        "getaddrinfo@cares_wrap",
+        "_domainToASCII@url",
+        "setURLConstructor@url",
+        "setupObservers@performance"
+    ],
+    "lookupService@dns": [
+        "getnameinfo@cares_wrap",
+        "setupObservers@performance"
+    ],
+    "setServers@dns": [
+        "ChannelWrap@cares_wrap"
+    ],
+    "access@fs": [
+        "access@fs"
+    ],
+    "accessSync@fs": [
+        "access@fs"
+    ],
+    "chown@fs": [
+        "chown@fs"
+    ],
+    "chownSync@fs": [
+        "chown@fs"
+    ],
+    "chmod@fs": [
+        "chmod@fs"
+    ],
+    "chmodSync@fs": [
+        "chmod@fs"
+    ],
+    "close@fs": [
+        "close@fs"
+    ],
+    "closeSync@fs": [
+        "close@fs"
+    ],
+    "copyFile@fs": [
+        "copyFile@fs"
+    ],
+    "copyFileSync@fs": [
+        "copyFile@fs"
+    ],
+    "existsSync@fs": [
+        "access@fs",
+        "stat@fs"
+    ],
+    "fchown@fs": [
+        "fchown@fs"
+    ],
+    "fchownSync@fs": [
+        "fchown@fs"
+    ],
+    "fchmod@fs": [
+        "fchmod@fs"
+    ],
+    "fchmodSync@fs": [
+        "fchmod@fs"
+    ],
+    "fdatasync@fs": [
+        "fdatasync@fs"
+    ],
+    "fdatasyncSync@fs": [
+        "fdatasync@fs"
+    ],
+    "fstat@fs": [
+        "fstat@fs"
+    ],
+    "fstatSync@fs": [
+        "fstat@fs"
+    ],
+    "fsync@fs": [
+        "fsync@fs"
+    ],
+    "fsyncSync@fs": [
+        "fsync@fs"
+    ],
+    "ftruncate@fs": [
+        "ftruncate@fs"
+    ],
+    "ftruncateSync@fs": [
+        "ftruncate@fs"
+    ],
+    "futimes@fs": [
+        "futimes@fs"
+    ],
+    "futimesSync@fs": [
+        "futimes@fs"
+    ],
+    "lchown@fs": [
+        "lchown@fs"
+    ],
+    "lchownSync@fs": [
+        "lchown@fs"
+    ],
+    "link@fs": [
+        "link@fs"
+    ],
+    "linkSync@fs": [
+        "link@fs"
+    ],
+    "lstat@fs": [
+        "lstat@fs"
+    ],
+    "lstatSync@fs": [
+        "lstat@fs"
+    ],
+    "lutimes@fs": [
+       "lutimes@fs"
+    ],
+    "lutimesSync@fs": [
+        "lutimes@fs"
+    ],
+    "mkdir@fs": [
+        "mkdir@fs"
+    ],
+    "mkdirSync@fs": [
+        "mkdir@fs"
+    ],
+    "mkdtemp@fs": [
+        "mkdtemp@fs"
+    ],
+    "mkdtempSync@fs": [
+        "mkdtemp@fs"
+    ],
+    "open@fs": [
+        "open@fs"
+    ],
+    "openSync@fs": [
+        "open@fs"
+    ],
+    "readdir@fs": [
+        "readdir@fs"
+    ],
+    "readdirSync@fs": [
+        "readdir@fs",
+        "lstat@fs"
+    ],
+    "read@fs": [
+        "read@fs"
+    ],
+    "readSync@fs": [
+        "read@fs"
+    ],
+    "readv@fs": [
+        "readBuffers@fs"
+    ],
+    "readvSync@fs": [
+        "readBuffers@fs"
+    ],
+    "readFile@fs": [
+        "open@fs"
+    ],
+    "readFileSync@fs": [
+        "fstat@fs"
+    ],
+    "readlink@fs": [
+        "readlink@fs"
+    ],
+    "readlinkSync@fs": [
+        "readlink@fs"
+    ],
+    "realpath@fs": [
+        "_domainToUnicode@url",
+        "setURLConstructor@url"
+    ],
+    "realpathSync@fs": [
+        "readlink@fs",
+        "_domainToUnicode@url",
+        "lstat@fs",
+        "setURLConstructor@url",
+        "stat@fs"
+    ],
+    "rename@fs": [
+        "rename@fs"
+    ],
+    "renameSync@fs": [
+        "rename@fs"
+    ],
+    "rmdir@fs": [
+        "rmdir@fs"
+    ],
+    "rmdirSync@fs": [
+        "rmdir@fs"
+    ],
+    "stat@fs": [
+        "stat@fs"
+    ],
+    "statSync@fs": [
+        "stat@fs"
+    ],
+    "symlink@fs": [
+        "symlink@fs"
+    ],
+    "symlinkSync@fs": [
+        "symlink@fs"
+    ],
+    "unlink@fs": [
+        "unlink@fs"
+    ],
+    "unlinkSync@fs": [
+        "unlink@fs"
+    ],
+    "utimes@fs": [
+        "utimes@fs"
+    ],
+    "utimesSync@fs": [
+        "utimes@fs"
+    ],
+    "watch@fs": [
+        "FSEvent@fs_event_wrap"
+    ],
+    "write@fs": [
+        "writeString@fs",
+        "writeBuffer@fs"
+    ],
+    "writeSync@fs": [
+        "writeString@fs",
+        "writeBuffer@fs"
+    ],
+    "writev@fs": [
+        "writeBuffers@fs"
+    ],
+    "writevSync@fs": [
+        "writeBuffers@fs"
+    ],
+    "get@http": [
+        "setURLConstructor@url"
+    ],
+    "request@http": [
+        "setURLConstructor@url"
+    ],
+    "get@https": [
+        "setURLConstructor@url"
+    ],
+    "request@https": [
+        "setURLConstructor@url"
+    ],
+    "open@inspector": [
+        "waitForDebugger@inspector",
+        "isEnabled@inspector",
+        "open@inspector"
+    ],
+    "waitForDebugger@inspector": [
+        "waitForDebugger@inspector"
+    ],
+    "_createServerHandle@net": [
+        "guessHandleType@util",
+        "Pipe@pipe_wrap",
+        "TCP@tcp_wrap"
+    ],
+    "connect@net": [
+        "queueDestroyAsyncId@async_wrap",
+        "toggleTimerRef@timers",
+        "guessHandleType@util",
+        "scheduleTimer@timers",
+        "TCP@tcp_wrap",
+        "Pipe@pipe_wrap"
+    ],
+    "Socket@net": [
+        "guessHandleType@util",
+        "Pipe@pipe_wrap",
+        "TCP@tcp_wrap"
+    ],
+    "getPriority@os": [
+        "_getPriority@os"
+    ],
+    "loadavg@os": [
+        "getLoadAvg@os"
+    ],
+    "networkInterfaces@os": [
+        "_getOSInformation@os"
+    ],
+    "setPriority@os": [
+        "_setPriority@os"
+    ],
+    "userInfo@os": [
+        "getUserInfo@os"
+    ],
+    "start@repl": [
+        "getCLIOptions@options"
+    ],
+    "REPLServer@repl": [
+        "getCLIOptions@options"
+    ],
+    "setTimeout@timers": [
+        "scheduleTimer@timers"
+    ],
+    "clearTimeout@timers": [
+        "queueDestroyAsyncId@async_wrap",
+        "toggleTimerRef@timers"
+    ],
+    "clearImmediate@timers": [
+        "queueDestroyAsyncId@async_wrap",
+        "toggleImmediateRef@timers"
+    ],
+    "setInterval@timers": [
+        "scheduleTimer@timers"
+    ],
+    "clearInterval@timers": [
+        "queueDestroyAsyncId@async_wrap",
+        "toggleTimerRef@timers"
+    ],
+    "createTracing@trace_events": [
+        "CategorySet@trace_events"
+    ],
+    "ReadStream@tty": [
+        "guessHandleType@util",
+        "Pipe@pipe_wrap",
+        "TCP@tcp_wrap",
+        "TTY@tty_wrap"
+    ],
+    "WriteStream@tty": [
+        "guessHandleType@util",
+        "Pipe@pipe_wrap",
+        "TCP@tcp_wrap",
+        "TTY@tty_wrap"
+    ],
+    "parse@url": [
+        "_domainToASCII@url",
+        "setURLConstructor@url"
+    ],
+    "resolveObject@url": [
+        "_domainToASCII@url",
+        "setURLConstructor@url"
+    ],
+    "format@url": [
+        "_domainToASCII@url",
+        "setURLConstructor@url"
+    ],
+    "log@util": [
+        "previewEntries@util",
+        "getOwnNonIndexProperties@util",
+        "getPromiseDetails@util",
+        "internalGetConstructorName@util",
+        "toString@util",
+        "getStringWidth@icu",
+        "getProxyDetails@util"
+    ],
+    "getHeapSnapshot@v8": [
+        "createHeapSnapshotStream@heap_utils"
+    ],
+    "writeHeapSnapshot@v8": [
+        "triggerHeapSnapshot@heap_utils"
+    ],
+    "createContext@vm": [
+        "_isContext@contextify",
+        "makeContext@contextify",
+        "MicrotaskQueue@contextify"
+    ],
+    "runInContext@vm": [
+        "_isContext@contextify"
+    ],
+    "runInNewContext@vm": [
+        "_isContext@contextify",
+        "makeContext@contextify",
+        "MicrotaskQueue@contextify"
+    ],
+    "isContext@vm": [
+        "_isContext@contextify"
+    ],
+    "compileFunction@vm": [
+        "_compileFunction@contextify",
+        "set@module_wrap"
+    ],
+    "measureMemory@vm": [
+        "_measureMemory@contextify"
+    ],
+    "ClientRequest@_http_client": [
+        "setURLConstructor@url"
+    ],
+    "freeParser@_http_common": [
+        "getCLIOptions@options"
+    ],
+    "ServerResponse@_http_server": [
+        "setupObservers@performance"
+    ],
+    "SecureContext@_tls_common": [
+        "init@crypto",
+        "NativeSecureContext@crypto",
+        "setOptions@crypto"
+    ],
+    "createSecureContext@_tls_common": [
+        "init@crypto",
+        "NativeSecureContext@crypto",
+        "setOptions@crypto"
+    ]
+} 

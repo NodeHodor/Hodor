@@ -7,3 +7,4 @@ fs.readFile('./example.md', 'utf8', function(err, data){
   var x = content.attributes + 'Hello';
   console.log(content.body);
 })
+

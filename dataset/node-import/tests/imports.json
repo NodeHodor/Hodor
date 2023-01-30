@@ -1,0 +1,25 @@
+{
+    "default"   : {
+        "packages" : [
+            "short-sass",
+            "native-js",
+            "csscript"
+        ],
+        "location" : "libraries/"
+    },
+    "corelib"   : {
+        "packages" : [
+            "domlist",
+            "babonless",
+            "csscript"
+        ],
+        "location" : "core"
+    },
+    "frontlibs" : {
+        "packages" : [
+            "angularic-ionicon",
+            "csscript"
+        ],
+        "location" : "front"
+    }
+}
