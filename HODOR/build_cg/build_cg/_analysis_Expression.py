@@ -57,10 +57,11 @@ def analysis_Expression(self, block, type, f=0, p=None):
     elif type == "Literal":
         return []
     else:
-        pass
+        logging.error(f"Expression type did not be analysised! {type}")
         return [("", ())]
 
 def analysis_TemplateLiteral(self, _node):
+    # `Hello, ${user.name}!`
     r = list()
     expressions = _node["expressions"]
     for expression in expressions:
@@ -76,9 +77,10 @@ def analysis_AssignmentExpression(self, block, f=0):
     left_expression = block["left"]
 
     left_list.append(left_expression)
+    source_code = self.get_source_code(self.module_name, block)
 
     result_list = list()
-
+    self.analysis_Expression(right_expression, right_expression["type"], f=0)
     while right_expression["type"] == "AssignmentExpression":
         left_expression = right_expression["left"]
         left_list.append(left_expression)
@@ -113,6 +115,10 @@ def analysis_AssignmentExpression(self, block, f=0):
                     if right_expression not in self.scopes[p[0]][p[1][0]][p[1][1][0]][p[1][1][1]]["blck"]:
                         self.scopes[p[0]][p[1][0]][p[1][1][0]][p[1][1][1]]["blck"].append(right_expression)
                     self.scopes[p[0]][p[1][0]][p[1][1][0]][p[1][1][1]]["assign"] = True
+                elif p[1][1] in ["prop", "this"]:
+                    if right_expression not in self.scopes[p[0]][p[1][0]][p[1][1]]["blck"]:
+                        self.scopes[p[0]][p[1][0]][p[1][1]]["blck"].append(right_expression)
+                    self.scopes[p[0]][p[1][0]][p[1][1]]["assign"] = True
                 else:
                     if right_expression not in self.scopes[p[0]][p[1][0]][p[1][1]]["blck"]:
                         self.scopes[p[0]][p[1][0]][p[1][1]]["blck"].append(right_expression)
@@ -148,7 +154,7 @@ def analysis_AssignmentExpression(self, block, f=0):
                 if type(__properties) == tuple:
                     _init = _init[0]
         else:
-            pass
+            logging.error("[-] Assignment Expression left list type is error!! ")
     if f == 1:
         return right_expression
     else:
@@ -157,6 +163,7 @@ def analysis_AssignmentExpression(self, block, f=0):
 def assignment_memberexpression(self, block):
     _property = block["property"]
     _object = block["object"]
+
     work_list = list()
     work_list.append(_property)
     while _object["type"] == "MemberExpression":
@@ -166,6 +173,7 @@ def assignment_memberexpression(self, block):
     work_list.append(_object)
 
     block_source_code = self.get_source_code(self.module_name, block)
+
     if (work_list[-1]["type"] == "Identifier" and work_list[-1]["name"] == "module" \
         and work_list[-2]["type"] == "Identifier" and work_list[-2]["name"] == "exports"):
         _key = (self.scope_id[1], ("module.exports", (block["start"], block["end"])))
@@ -206,13 +214,14 @@ def assignment_memberexpression(self, block):
                         }
                         return [(self.module_name, (p, final_key))]
                     else:
-                        pass
+                        logging.error(f"node type error {node['type']}")
                         return [(self.module_name, (self.scope_id, _key))]
                 else:
-                    pass
+                    logging.error("length of work list > 1")
                     return [(self.module_name, (self.scope_id, _key))]
         else:
             return [(self.module_name, (self.scope_id, _key))]
+
     elif work_list[-1]["type"] == "Identifier" and work_list[-1]["name"] == "exports":
         _key = (self.scope_id[1], ("exports", (block["start"], block["end"])))
         self.scopes[self.module_name][self.scope_id][_key] = {
@@ -251,10 +260,10 @@ def assignment_memberexpression(self, block):
                         }
                         return [(self.module_name, (p, final_key))]
                     else:
-                        pass
+                        logging.error(f"node type error {node['type']}")
                         return [(self.module_name, (self.scope_id, _key))]
                 else:
-                    pass
+                    logging.error("length of work list > 1")
                     return [(self.module_name, (self.scope_id, _key))]
         else:
             return [(self.module_name, (self.scope_id, _key))]
@@ -281,18 +290,80 @@ def assignment_memberexpression(self, block):
         elif node_type == "ThisExpression":
             if "this" not in self.scopes[self.module_name][self.scope_id]:
                 self.scopes[self.module_name][self.scope_id]["this"] = dict()
-            p_list.append((self.module_name, (self.scope_id, ("this", ()))))               
+            p_list.append((self.module_name, (self.scope_id, "this")))           
         else:
-            pass
-        
+            logging.error(node_type)
+
+        former_p = ""
         while work_list:
             node = work_list.pop()
             node_type = node["type"]
             node_name = self.source_code[self.module_name][node["start"]:node["end"]]
-            if node_type in ["Literal", 'UpdateExpression', 'BinaryExpression']:
-                continue
-            elif node_type == "MemberExpression":
-                continue
+            if node_type in ['UpdateExpression', 'BinaryExpression', "MemberExpression"]:
+                if former_p:
+                    r_list.append(former_p)
+                    p_list.pop()
+                else:
+                    for p in p_list:
+                        if p[1][1] in ["prop", "this"]:
+                            p_list.pop()
+                            continue
+                        r_list.append(p)
+            elif node_type == "Literal":
+                if type(node['value']) != int:
+                    new_p_list = list()
+                    analysised_p_list = list()
+                    while p_list:
+                        p = p_list.pop()
+                        if p in analysised_p_list:
+                            continue
+                        analysised_p_list.append(p)
+                        if node_name == "prototype":
+                            former_p = p
+                            if p[1][1] not in self.scopes[p[0]]:
+                                self.scopes[p[0]][p[1][1]] = dict()
+                            if "prop" not in self.scopes[p[0]][p[1][1]]:
+                                self.scopes[p[0]][p[1][1]]["prop"] = dict() 
+
+                            if len(work_list):    
+                                prop_key = (p[0], ((p[1][1], "prop")))
+                                new_p_list.append(prop_key)   
+                                continue
+                            else:  
+                                p_list.append(p)
+                                
+                        if p[0] in ["undefined", "primordials", "binding"]:
+                            continue
+                        
+                        if p[1][1] in ["this", "prop"]:
+                            _key = (p[1][0][1], (node["value"], (node["start"], node["end"])))
+                            self.scopes[p[0]][p[1][0]][p[1][1]][_key] = {
+                                "name": node["value"],
+                                "type": "var",
+                                "edge": [],
+                                "blck": [],
+                                "loc": node["loc"],
+                                "start": block["start"],
+                                "end": block["end"],
+                                "native": False,
+                            }
+                            new_p_list.append((p[0], (p[1][0], (p[1][1], _key))))
+                        else:
+                            if p[1][1] not in self.scopes[p[0]]:
+                                self.scopes[p[0]][p[1][1]] = dict()
+                                _key = (p[1][1][1], (node["value"], (node["start"], node["end"])))
+                                self.scopes[p[0]][p[1][1]][_key] = {
+                                    "name": node["value"],
+                                    "type": "var",
+                                    "edge": [],
+                                    "blck": [],
+                                    "loc": node["loc"],
+                                    "start": block["start"],
+                                    "end": block["end"],
+                                    "native": False,
+                                }
+                                new_p_list.append((self.module_name, (p[1][1], _key)))
+                    p_list.extend(new_p_list)
             elif node_type == "Identifier":
                 new_p_list = list()
                 analysised_p_list = list()
@@ -302,19 +373,25 @@ def assignment_memberexpression(self, block):
                         continue
                     analysised_p_list.append(p)
                     if node_name == "prototype":
+                        former_p = p
                         if p[1][1] not in self.scopes[p[0]]:
                             self.scopes[p[0]][p[1][1]] = dict()
                         if "prop" not in self.scopes[p[0]][p[1][1]]:
-                            self.scopes[p[0]][p[1][1]]["prop"] = dict()     
-                        prop_key = (p[0],(p[1][1], ("prop",())))
-                        new_p_list.append(prop_key)     
-                        continue
+                            self.scopes[p[0]][p[1][1]]["prop"] = dict() 
+
+                        if len(work_list):    
+                            prop_key = (p[0], ((p[1][1], "prop")))
+                            new_p_list.append(prop_key)   
+                            continue
+                        else:  
+                            p_list.append(p)
+                            
                     if p[0] in ["undefined", "primordials", "binding"]:
                         continue
                     
-                    if p[1][1][0] in ["this", "prop"]:
+                    if p[1][1] in ["this", "prop"]:
                         _key = (p[1][0][1], (node["name"], (node["start"], node["end"])))
-                        self.scopes[p[0]][p[1][0]][p[1][1][0]][_key] = {
+                        self.scopes[p[0]][p[1][0]][p[1][1]][_key] = {
                             "name": node["name"],
                             "type": "var",
                             "edge": [],
@@ -324,7 +401,7 @@ def assignment_memberexpression(self, block):
                             "end": block["end"],
                             "native": False,
                         }
-                        new_p_list.append((p[0], (p[1][0], (p[1][1][0], _key))))
+                        new_p_list.append((p[0], (p[1][0], (p[1][1], _key))))
                     else:
                         if p[1][1] not in self.scopes[p[0]]:
                             self.scopes[p[0]][p[1][1]] = dict()
@@ -342,12 +419,15 @@ def assignment_memberexpression(self, block):
                             new_p_list.append((self.module_name, (p[1][1], _key)))
                 p_list.extend(new_p_list)
             else:
-                pass
-        r_list.extend(p_list)
+                logging.error(f"node type error {node_type}")
+                # pass
+        for p in p_list:
+            if p[1][1] in ["prop", "this"]:
+                continue
+            r_list.append(p)
+        # r_list.extend(p_list)
         return r_list
-        
-
-        
+              
 def analysis_ArrayExpression(self, block):
     r = list()
     work_list = list()
@@ -356,6 +436,8 @@ def analysis_ArrayExpression(self, block):
         _b = work_list.pop()
         elements = _b["elements"]
         for element in elements:
+            if not element:
+                continue
             if element["type"] == "ArrayExpression":
                 work_list.append(element)
             element_type = element["type"]
@@ -384,7 +466,7 @@ def analysis_ArrayExpression(self, block):
             elif element in ["YieldExpression"]:
                 pass
             else:
-                pass
+                logging.error(f"tmp blck type error")
     return r
 
 def analysis_ArrowFunctionExpression(self, block, f=0):
@@ -407,30 +489,38 @@ def analysis_ArrowFunctionExpression(self, block, f=0):
             self.scope_list.append((self.scope_id[1], (_name, block)))
         if _key not in self.scopes[self.module_name]:
             self.scopes[self.module_name][_key] = dict()
+
         self.record_function_table(name=_name, id=(_sid, _key))
         self.func_id[(block["start"], block["end"])] = f"{_name}@{self.module_name}, {block['loc']['start']['line']}"
 
         return [(self.module_name, (_sid, _key))]
     else:
-        _sid = self.scope_id
-        self.analysis_params(block["params"])
-        body = block["body"]
-        if body["type"] == "BlockStatement":
-            for _block in body["body"]:
-                if "Declaration" in _block["type"]:
-                    self.analysis_Declaration(_block, _block["type"])
-                elif "Statement" in _block["type"]:
-                    self.analysis_Statement(_block, _block["type"])
-                else:
-                    pass
-        elif "Expression" in body["type"]:
-            self.analysis_Expression(body, body["type"])
-        elif body["type"] == "Literal":
-            pass
-        elif body["type"] == "Identifier":
-            pass
+        if self.stage == "inter":
+            _sid = self.scope_id
+            _name = block["id"]["name"] if block["id"] else "anonymous"
+            _key = (self.scope_id[1], (_name, (block["start"], block["end"])))
+            self.scopes[self.module_name][_sid][_key]
+            return [(self.module_name, (_sid, _key))]
         else:
-            pass
+            _sid = self.scope_id
+            self.analysis_params(block["params"])
+            body = block["body"]
+            if body["type"] == "BlockStatement":
+                for _block in body["body"]:
+                    if "Declaration" in _block["type"]:
+                        self.analysis_Declaration(_block, _block["type"])
+                    elif "Statement" in _block["type"]:
+                        self.analysis_Statement(_block, _block["type"])
+                    else:
+                        logging.error("[-] analysis arrow function declaration error! ", _block["type"])
+            elif "Expression" in body["type"]:
+                self.analysis_Expression(body, body["type"])
+            elif body["type"] == "Literal":
+                pass
+            elif body["type"] == "Identifier":
+                pass
+            else:
+                logging.error(f"[-] Arrow Function Expressio body type error! {body['type']}")
 
 def analysis_BinaryExpression(self, block):
     r = list()
@@ -443,7 +533,7 @@ def analysis_BinaryExpression(self, block):
         pass
 
     right = block["right"]
-    if "Expression" in left["type"]:
+    if "Expression" in right["type"]:
         self.analysis_Expression(right, right["type"])
     elif right["type"] == "TemplateLiteral":
         self.analysis_TemplateLiteral(right)
@@ -496,7 +586,7 @@ def analysis_object(self, block, block_source_code):
                             _name = pro["value"]
                         else:
                             # TODO
-                            pass
+                            logging.error(f'{pro["type"]}')
                             continue
                         _key = (dest_p[1][1], (_name, (pro["start"], pro["end"])))
                         self.scopes[dest_p[0]][dest_p[1][1]][_key] = {
@@ -576,6 +666,8 @@ def analysis_func(self, block, block_source_code):
 
 def analysis_CallExpression(self, block=None, f=0, call_p=None):
     if f == 0:
+        r_list = list()
+
         block_source_code = self.get_source_code(self.module_name, block)
         callee_source_code = self.get_source_code(self.module_name, block["callee"])
         if callee_source_code.startswith("Object.assign") or \
@@ -584,8 +676,6 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
             callee_source_code.startswith("Object.defineProperties") or \
             callee_source_code.startswith("Object.setPrototypeOf"):
             r_list = self.analysis_object(block, block_source_code)
-            return r_list
-        
         elif callee_source_code.startswith("Object.entries") or \
             callee_source_code.startswith("Object.freeze") or \
             callee_source_code.startswith("Object.getOwnPropertyDescriptor") or \
@@ -609,7 +699,7 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
             callee_source_code.startswith("Object.toString") or \
             callee_source_code.startswith("Object.valueOf") or \
             callee_source_code.startswith("Object.values"):
-            return []
+            pass
 
         _sid = self.scope_id
         _callee = block["callee"]
@@ -636,15 +726,20 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                 },
                 "native": False
             }
+
             if block["callee"]["type"] == "Identifier" and block["callee"]["name"] == "require":
                 if block["arguments"][0]["type"] == "Literal":
                     module_name_value = block["arguments"][0]["value"]
                     if module_name_value not in self.builtins:
                         absModule_path = self.calc_require_path(module_name_value)
+                        if self.module_name not in self.dependency_cg:
+                            self.dependency_cg[self.module_name] = set()
+                        self.dependency_cg[self.module_name].add(absModule_path)
                         if absModule_path not in self.module_list and absModule_path not in self.scopes:
                             self.module_list.append(absModule_path)
                 else:
-                    pass
+                    logging.error("module name value error")
+
             arguments = block["arguments"]
             for argument_num in range(0, len(arguments)):
                 argument = arguments[argument_num]
@@ -654,6 +749,8 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                 while argument_node_list:
                     argument_node = argument_node_list.pop()
                     argument_node_type = argument_node["type"]
+                    if argument_node["type"] != "Identifier":
+                        self.analysis_Expression(argument_node, argument_node["type"])
                     if argument_node_type in ["FunctionExpression", 
                                         "CallExpression", 
                                         "NewExpression", 
@@ -666,10 +763,9 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                                         "SpreadElement",
                                         "UpdateExpression",
                                         "ChainExpression",
-                                        "ArrayExpression"
+                                        "ArrayExpression",
                                         ]:
                         _name = "anonymous"
-
                         if argument_node["type"] == "SpreadElement":
                             argument_node = argument_node["argument"]
                             
@@ -697,10 +793,11 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                                 "end": argument_node["end"],
                                 "points": []
                             }
-                            self.scopes[self.module_name][_sid][_key]["arguments_key"]["id"][argument_num] = list()
-                            self.scopes[self.module_name][_sid][_key]["arguments_key"]["id"][argument_num].append((self.module_name, (_sid, __key)))
-                            self.scopes[self.module_name][_sid][_key]["arguments_key"]["name"][_name] = list()
-                            self.scopes[self.module_name][_sid][_key]["arguments_key"]["name"][_name].append((self.module_name, (_sid, __key)))                        
+                        self.scopes[self.module_name][_sid][_key]["arguments_key"]["id"][argument_num] = list()
+                        self.scopes[self.module_name][_sid][_key]["arguments_key"]["id"][argument_num].append((self.module_name, (_sid, __key)))
+
+                        self.scopes[self.module_name][_sid][_key]["arguments_key"]["name"][_name] = list()
+                        self.scopes[self.module_name][_sid][_key]["arguments_key"]["name"][_name].append((self.module_name, (_sid, __key)))                        
 
                         if argument_node_type in ["FunctionExpression", "ArrowFunctionExpression", "ClassExpression", "ObjectExpression"]:
                             if  (self.scope_id[1], (_name, argument_node)) not in self.scope_list:
@@ -721,14 +818,31 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                     elif argument_node["type"] in ["Literal", ]:
                         pass
                     else:
-                        pass
+                        logging.error(f"aaaaaaaaaaaaaaaa {argument_node['type']}")
+
+        if _callee["type"] == "MemberExpression":
+            memberexpression_property = _callee["property"]
+            if memberexpression_property["type"] == "Identifier":
+                if memberexpression_property["name"] in self.native_methods:
+                    arguments = block["arguments"]
+                    for argument_node in arguments:
+                        if argument_node["type"] == "FunctionExpression":
+                            _name = "anonymous"
+                            if argument_node["type"] == "FunctionExpression":
+                                _name = "anonymous"
+                                if argument_node["id"]:
+                                    _name = argument_node["id"]["name"]
+                                argument_node_p = (self.scope_id[1], (_name, (argument_node["start"], argument_node["end"])))
+                                tmp = self.scopes[self.module_name][self.scope_id][argument_node_p]
+                                self.scopes[self.module_name][_sid][_key]["edge"].append((self.module_name, (self.scope_id, argument_node_p)))
+                                r_list.append((self.module_name, (self.scope_id, argument_node_p)))
+        
         if _callee["type"] in ["CallExpression", "MemberExpression", "NewExpression", 'MemberExpression']:
             self.analysis_Expression(_callee, _callee["type"], f=0)
         elif _callee["type"] in ["FunctionExpression", "ArrowFunctionExpression"]:
             if not self.scopes[self.module_name][_sid][_key]["edge"]:
                 self.scopes[self.module_name][_sid][_key]["edge"].extend(self.analysis_Expression(_callee, _callee["type"], f=0))
         r_list = [(self.module_name, (_sid, _key))]
-
 
         if ".apply(" in block_source_code or \
             ".bind(" in block_source_code or \
@@ -744,7 +858,7 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
         if block in self.total_call_mem_expression:
             return r_list
         self.total_call_mem_expression.append(block)
-
+        
         callee = block["callee"]
         if callee["type"] == "Identifier":
             callee_name = callee["name"]
@@ -754,22 +868,24 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                 if argument["type"] == "Literal":
                     r_list.append(("internalBinding", (argument["value"], )))
                 else:
-                    pass
+                    logging.error(f"argument type error, {argument['type']}")
             if callee_name == "require":
                 if block["arguments"][0]["type"] == "Literal":
                     module_name_value = block["arguments"][0]["value"]
-                    if self.aim == "built-in":
-                        if module_name_value in self.builtins:
-                            r_list.append((module_name_value, ))
+                    if module_name_value in self.builtins:
+                        r_list.append((module_name_value, ))
+                    else:
+                        absModule_path = self.calc_require_path(module_name_value)
+                        if self.module_name not in self.dependency_cg:
+                               self.dependency_cg[self.module_name] = set()
+                        self.dependency_cg[self.module_name].add(absModule_path)
+                        if absModule_path in self.module_exports:
+                            self.total_call_mem_expression.pop()
+                            return self.module_exports[absModule_path]
                         else:
-                            absModule_path = self.calc_require_path(module_name_value)
-                            if absModule_path in self.module_exports:
-                                self.total_call_mem_expression.pop()
-                                return self.module_exports[absModule_path]
-                            else:
-                                pass
+                            logging.error("can not calc require path")
                 else:
-                    pass
+                    logging.error("module name value error")
                     
             if callee_name in self.function_table:
                 for func_id in self.function_table[callee_name]:
@@ -783,6 +899,19 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                 iden_s = self.analysis_Identifier(callee)
                 p_list.extend(iden_s)
         elif callee["type"] == "MemberExpression":
+            memberexpression_property = callee["property"]
+            if memberexpression_property["type"] == "Identifier":
+                if memberexpression_property["name"] in self.native_methods:
+                    arguments = block["arguments"]
+                    for argument_node in arguments:
+                        if argument_node["type"] == "FunctionExpression":
+                            _name = "anonymous"
+                            if argument_node["type"] == "FunctionExpression":
+                                if argument_node["id"]:
+                                    _name = argument_node["id"]["name"]
+                                argument_node_p = (self.scope_id[1], (_name, (argument_node["start"], argument_node["end"])))
+                                tmp = self.scopes[self.module_name][self.scope_id][argument_node_p]
+                                r_list.append((self.module_name, (self.scope_id, argument_node_p)))
             memberexpression_pointer_list = self.analysis_memberexpression_pointer(callee, call_p=call_p)
             p_list.extend(memberexpression_pointer_list)
         elif callee["type"] == "CallExpression":
@@ -798,21 +927,23 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                     callee_edge_node_name = callee_edge_node["name"]
                     if callee_edge_node_name in self.function_table:
                         if callee_edge[1][1] in self.function_table[callee_edge_node_name]:
+
                             return_p_list = self.function_table[callee_edge_node_name][callee_edge[1][1]]["return"]
                             if return_p_list:
                                 p_list.extend(return_p_list)
                             else:
+                                # logging.error("TODO")
                                 pass
                         else:
-                            pass
+                            logging.error(f"callee_edge_node_range not in function table {callee_edge}")
                     else:
-                        pass
+                        logging.error(f"callee egde not in function table")
 
                 else:
-                    pass
+                    logging.error(f"callee edge node type error {callee_edge_node_type}")
             p_list.extend(return_list)
         else:
-            pass
+            logging.error(f"callee type error {callee['type']}")
         
         alias = set()
         analysised_p_list = set()
@@ -874,9 +1005,11 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                 alias.add(p)
             elif p_type == "var":
                 if p_edge_list:
-                    for e in p_edge_list:
-                        p_list.append(e)
-                        alias.add(e)
+                    # TO-DO
+                    if len(p_edge_list) < 20:
+                        for e in p_edge_list:
+                            p_list.append(e)
+                            alias.add(e)
                 else:
                     if p_blck_list:
                         for __blck in p_blck_list:
@@ -888,7 +1021,7 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                                 self.pop_module_scopeid_stack()
                                 p_list.extend(memberexpression_pointer_list)
                             else:
-                                pass
+                                logging.error(f"TODO: {__blck['type']}")
                         if p[1][1] in self.scopes[p[0]]:
                             r_list.append(p)
             elif p_type == "call":
@@ -900,7 +1033,15 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                     elif p_node["arguments"][0]["type"] == "Literal":
                         module_name_value = p_node["arguments"][0]["value"]
                     if module_name_value:
+                        
+                        self.push_module_scopeid_stack()
+                        self.module_name = p[0]
                         absModule_path = self.calc_require_path(module_name_value)
+                        if self.module_name not in self.dependency_cg:
+                            self.dependency_cg[self.module_name] = set()
+                        self.dependency_cg[self.module_name].add(absModule_path)
+                        self.pop_module_scopeid_stack()
+
                         if absModule_path in self.module_exports:
                             module_exports_list = self.module_exports[absModule_path]
                             self.push_module_scopeid_stack()
@@ -911,6 +1052,7 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                 else:
                     if not p_edge_list and p_blck_list:
                         for _blck in p_blck_list:
+                            # if call_p != p:
                             p_edge_list.extend(self.analysis_Expression(_blck, _blck["type"], 1, p=p))
                     if p_edge_list:
                         for p_edge in p_edge_list:
@@ -929,17 +1071,23 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                                 if return_p_list:
                                     p_list.extend(return_p_list)
                                 else:
-                                    pass
+                                    logging.error("TO-DO")
                             else:
-                                pass
+                                logging.error("p edge type error")
             elif p_type == "mem":
                 if p_blck_list and not p_edge_list:
                     for p_blck in p_blck_list:
+                        self.push_module_scopeid_stack()
+                        self.module_name = p[0]
+                        self.scope_id = p[1][0]
                         __p_list = self.analysis_Expression(p_blck, p_blck["type"], f=1, p=p)
                         if __p_list:
                             p_edge_list.extend(__p_list)
+                        self.pop_module_scopeid_stack()
                 else:
-                    p_list.extend(p_edge_list)
+                    # TO-DO
+                    if len(p_edge_list) < 20:
+                        p_list.extend(p_edge_list)
             elif p_type == "rtrn":
                 if not p_edge_list and p_blck_list:
                     for _blck in p_blck_list:
@@ -951,15 +1099,13 @@ def analysis_CallExpression(self, block=None, f=0, call_p=None):
                     if call_p not in self.scopes[p[0]][p[1][0]][p[1][1]]["call"]:
                         self.scopes[p[0]][p[1][0]][p[1][1]]["call"].append(call_p)
                 else:
-                    pass
+                    logging.error("call p is None")
             elif p_type == "obj_mem":
                 p_list.extend(self.analysis_objmem(p_node))
             else:
-                pass
+                logging.error(f"call expression error {p_type}")
         self.total_call_mem_expression.pop()
         return r_list
-
-
 
 def analysis_ChainExpression(self, block):
     if block["expression"]["type"] == "MemberExpression" or \
@@ -967,7 +1113,7 @@ def analysis_ChainExpression(self, block):
         p_list = self.analysis_Expression(block["expression"], block["expression"]["type"])
         return p_list
     else:
-        pass
+        logging.error(block["expression"]["type"])
 
 def analysis_ClassExpression(self, block, f=0):
     if f == 0:
@@ -988,6 +1134,7 @@ def analysis_ClassExpression(self, block, f=0):
             "blck": [],
         }
 
+        # extends
         if block["superClass"]:
             p_list = self.analysis_Identifier(block["superClass"])
             self.scopes[self.module_name][_sid][_key]["edge"].extend(p_list)
@@ -1000,36 +1147,48 @@ def analysis_ClassExpression(self, block, f=0):
         self.record_function_table(name=_name, id=(_sid, _key))
         return [(self.module_name, (_sid, _key))]
     else:
-        _sid = self.scope_id
-        body = block["body"]
-        for _block in body["body"]:
-            if "Declaration" in _block["type"]:
-                self.analysis_Declaration(_block, _block["type"])
-            elif "MethodDefinition" == _block["type"]:
-                _value = _block["value"]
-                _key = _block["key"]
-                if _key["type"] in ["Identifier", "PrivateIdentifier"]:
-                    _key = _block["key"]["name"]
-                    _keyP = (self.scope_id[1], (_block["key"]["name"],
+        if self.stage == "inter":
+            _sid = self.scope_id
+            _name = "anonymous"
+            if "id" in block:
+                if block["id"] != None:
+                    if "name" in block["id"]:
+                        _name = block["id"]["name"]
+            _key = (self.scope_id[1], (_name, (block["start"], block["end"])))
+            self.scopes[self.module_name][_sid][_key]
+            return [(self.module_name, (_sid, _key)), ]
+        else:
+            _sid = self.scope_id
+            body = block["body"]
+            for _block in body["body"]:
+                if "Declaration" in _block["type"]:
+                    self.analysis_Declaration(_block, _block["type"])
+                elif "MethodDefinition" == _block["type"]:
+                    _value = _block["value"]
+                    _key = _block["key"]
+                    if _key["type"] in ["Identifier", "PrivateIdentifier"]:
+                        _key = _block["key"]["name"]
+                        _keyP = (self.scope_id[1], (_block["key"]["name"],
                              (_block["value"]["start"], _block["value"]["end"])))
-                    self.scopes[self.module_name][_sid][_keyP] = {
-                        "name": _key,
-                        "type": "func",
-                        "edge": [],
-                        "blck":[],
-                        "loc": _block["loc"],
-                        "start": _block["start"],
-                        "end": _block["end"],
-                        "prop": [],
-                        "self": False
-                    }
-                    if (self.scope_id[1], (_key, _value)) not in self.scope_list:
-                        self.scope_list.append((self.scope_id[1], (_key, _value)))
-                    self.func_id[(_value["start"], _value["end"])] = f"{_key}@{self.module_name}, {_block['loc']['start']['line']}"              
+                        self.scopes[self.module_name][_sid][_keyP] = {
+                            "name": _key,
+                            "type": "func",
+                            "edge": [],
+                            "blck":[],
+                            "loc": _block["loc"],
+                            "start": _block["start"],
+                            "end": _block["end"],
+                            "prop": [],
+                            "self": False
+                        }
+                        if (self.scope_id[1], (_key, _value)) not in self.scope_list:
+                            self.scope_list.append((self.scope_id[1], (_key, _value)))
+                        self.func_id[(_value["start"], _value["end"])] = f"{_key}@{self.module_name}, {_block['loc']['start']['line']}"              
+                    else:
+                        logging.error("[-] analysis class expression key is not a identifier! ", _key['type'],
+                            self.source_code[self.module_name][_key["start"]:_key["end"]], self.module_name)
                 else:
-                    pass
-            else:
-                pass
+                    logging.error("_block type error")
 
 def analysis_ConditionalExpression(self, block, f=0):
     test = block["test"]
@@ -1065,28 +1224,36 @@ def analysis_FunctionExpression(self, block, f=0):
         }
         if (self.scope_id[1], (_name, block)) not in self.scope_list:
             self.scope_list.append((self.scope_id[1], (_name, block)))
+
         self.record_function_table(name=_name, id=(_sid, _key))
         self.func_id[(block["start"], block["end"])] = f"{_name}@{self.module_name}, {block['loc']['start']['line']}"
 
         return [(self.module_name, (_sid, _key))]
     else:
-        _sid = self.scope_id
-        params = block["params"]
-        self.analysis_params(params)
+        if self.stage == "inter":
+            _sid = self.scope_id
+            _name = block["id"]["name"] if block["id"] else "anonymous"
+            _key = (self.scope_id[1], (_name, (block["start"], block["end"])))
+            self.scopes[self.module_name][_sid][_key]
+            return [(self.module_name, (_sid, _key))]
+        else:
+            _sid = self.scope_id
+            params = block["params"]
+            self.analysis_params(params)
 
-        body = block["body"]
-        for _block in body["body"]:
-            if "Declaration" in _block["type"]:
-                self.analysis_Declaration(_block, _block["type"])
-            elif "Statement" in _block["type"]:
-                self.analysis_Statement(_block, _block["type"])
-            else:
-                pass
+            body = block["body"]
+            for _block in body["body"]:
+                if "Declaration" in _block["type"]:
+                    self.analysis_Declaration(_block, _block["type"])
+                elif "Statement" in _block["type"]:
+                    self.analysis_Statement(_block, _block["type"])
+                else:
+                    logging.error("[-] analysis function declaration error! ", _block["type"])
 
 def analysis_LogicalExpression(self, block):
     left_expression = block["left"]
     right_expression = block["right"]
-
+    self.analysis_Expression(right_expression, right_expression["type"])
     while left_expression["type"] == "LogicalExpression":
         right_expression = left_expression["right"]
         left_expression = left_expression["left"]
@@ -1097,6 +1264,7 @@ def analysis_LogicalExpression(self, block):
 
 def analysis_MemberExpression(self, block, f=0):
     if f == 0:
+        block_source_code = self.get_source_code(self.module_name, block)
         _key = (self.scope_id[1], (self.source_code[self.module_name][block["start"]:block["end"]], (block["start"], block["end"])))
         if _key not in self.scopes[self.module_name][self.scope_id]:
             self.scopes[self.module_name][self.scope_id][_key] = {
@@ -1148,10 +1316,14 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
                     module_name_value = block["arguments"][0]["value"]
                     if module_name_value not in self.builtins:
                         absModule_path = self.calc_require_path(module_name_value)
+                        if self.module_name not in self.dependency_cg:
+                            self.dependency[self.module_name] = set()
+                        self.dependency[self.module_name].add(absModule_path)
                         if absModule_path not in self.module_list and absModule_path not in self.scopes:
                             self.module_list.append(absModule_path)
                 else:
-                    pass
+                    logging.error("module name value error")
+
             arguments = block["arguments"]
             for argument_num in range(0, len(arguments)):
                 argument = arguments[argument_num]
@@ -1161,6 +1333,7 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
                 while argument_node_list:
                     argument_node = argument_node_list.pop()
                     argument_node_type = argument_node["type"]
+                    self.analysis_Expression(argument_node, argument_node["type"])
                     if argument_node_type in ["FunctionExpression", 
                                         "CallExpression", 
                                         "NewExpression", 
@@ -1212,10 +1385,11 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
                                 self.record_function_table(name=_name, id=(_sid, __key))
                                 self.func_id[(block["start"], block["end"])] = f"{_name}@{self.module_name}, {argument_node['loc']['start']['line']}"
 
-                            self.scopes[self.module_name][_sid][_key]["arguments_key"]["id"][argument_num] = list()
-                            self.scopes[self.module_name][_sid][_key]["arguments_key"]["id"][argument_num].append((self.module_name, (_sid, __key)))
-                            self.scopes[self.module_name][_sid][_key]["arguments_key"]["name"][_name] = list()
-                            self.scopes[self.module_name][_sid][_key]["arguments_key"]["name"][_name].append((self.module_name, (_sid, __key)))                        
+                        self.scopes[self.module_name][_sid][_key]["arguments_key"]["id"][argument_num] = list()
+                        self.scopes[self.module_name][_sid][_key]["arguments_key"]["id"][argument_num].append((self.module_name, (_sid, __key)))
+
+                        self.scopes[self.module_name][_sid][_key]["arguments_key"]["name"][_name] = list()
+                        self.scopes[self.module_name][_sid][_key]["arguments_key"]["name"][_name].append((self.module_name, (_sid, __key)))                        
                     elif argument_node["type"] in ["ConditionalExpression"]:
                         consequent = argument_node["consequent"]
                         alternate = argument_node["alternate"]
@@ -1231,7 +1405,7 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
                     elif argument_node["type"] in ["Literal", ]:
                         pass
                     else:
-                        pass
+                        logging.error(f"aaaaaaaaaaaaaaaa {argument_node['type']}")
 
         
         if callee["type"] in ["CallExpression", "MemberExpression", "NewExpression"]:
@@ -1241,6 +1415,9 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
     else:
         p_list = list()
         r_list = list()
+
+        block_source_code = self.get_source_code(self.module_name, block)
+
         callee = block["callee"]
         if callee["type"] == "MemberExpression":
             self.push_module_scopeid_stack()
@@ -1253,7 +1430,7 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
             p_list.extend(Identifier_pointer_list)
             self.pop_module_scopeid_stack()
         else:
-            pass
+            logging.error(f"callee type error {callee['type']}")
 
         analysised_p_set = set()
         while p_list:
@@ -1276,6 +1453,14 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
                 if p[0] == "internalBinding":
                     r_list.append(p)
                     continue
+            if p[-1] in ["func", "obj"]:
+                p = p[0]
+                if p[1][1][0] == "this" or p[1][1][0] == "prop":
+                    p_node = self.scopes[p[0]][p[1][0]][p[1][1][0]][p[1][1][1]]
+                    p_name = p[1][1][1][1][0]
+                else:
+                    p_node = self.scopes[p[0]][p[1][0]][p[1][1]]
+                    p_name = p[1][1][1][0]
             if p[1][1][0] == "this" or p[1][1][0] == "prop":
                 p_node = self.scopes[p[0]][p[1][0]][p[1][1][0]][p[1][1][1]]
                 p_name = p[1][1][1][1][0]
@@ -1295,10 +1480,10 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
                             self.module_name = p[0]
                             self.scope_id = p[1][0]
                             memberexpression_pointer_list = self.analysis_memberexpression_pointer(__blck)
-                            self.pop_module_scopeid_stack()
+                            self.pop_module_scopeid_stack()   
                             p_list.extend(memberexpression_pointer_list)
                         else:
-                            pass
+                            logging.error(f"TO-DO {__blck['type']}")
                     if p[1][1] in self.scopes[p[0]]:
                         r_list.append(p)
             elif p_type in ["func", "class"]:
@@ -1311,6 +1496,9 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
                     self.push_module_scopeid_stack()
                     self.module_name = p[0]
                     absModule_path = self.calc_require_path(module_name_value)
+                    if self.module_name not in self.dependency_cg:
+                        self.dependency_cg[self.module_name] = set()
+                    self.dependency_cg[self.module_name].add(absModule_path)
                     self.pop_module_scopeid_stack()
                     if absModule_path in self.module_exports:
                         module_exports_list = self.module_exports[absModule_path]
@@ -1325,17 +1513,22 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
                             p_edge_list.extend(self.analysis_Expression(_blck, _blck["type"], 1, p=p))
                     if p_edge_list:
                         for p_edge in p_edge_list:
+                            if p_edge[0] in self.builtins:
+                                r_list.append(p_edge)
+                                continue
+                            if p_edge[0] in ["undefined", "primordials", "binding"]:
+                                continue
                             p_edge_node = self.scopes[p_edge[0]][p_edge[1][0]][p_edge[1][1]]
                             p_edge_node_type = p_edge_node["type"]
                             p_edge_node_name = p_edge_node["name"]
                             if p_edge_node_type == "func":
                                 return_p_list = self.function_table[p_edge_node_name][p_edge[1][1]]["return"]
-                                if return_p_list:
+                                if return_p_list:  
                                     p_list.extend(return_p_list)
                                 else:
-                                    pass
+                                    logging.error("TO-DO")
                             else:
-                                pass
+                                logging.error("p edge type error")
             elif p_type == "rtrn":
                 if not p_edge_list and p_blck_list:
                     for _blck in p_blck_list:
@@ -1348,12 +1541,13 @@ def analysis_NewExpression(self, block, f=0, call_p=None):
                     if call_p not in self.scopes[p[0]][p[1][0]][p[1][1]]["call"]:
                         self.scopes[p[0]][p[1][0]][p[1][1]]["call"].append(call_p)
                 else:
-                    pass
+                    logging.error("call p is None")
             elif p_type == "obj_mem":
                 p_block_list = self.analysis_objmem(p_node)
                 p_list.extend(p_block_list)
             else:
-                pass
+                # p_list.extend(self.analysis_objmem(p_node))
+                logging.error(f"p type error {p_type}")
         return r_list
 
 def analysis_TaggedTemplateExpression(self, block):
@@ -1361,7 +1555,7 @@ def analysis_TaggedTemplateExpression(self, block):
     if quasi["type"] == "TemplateLiteral":
         self.analysis_TemplateLiteral(quasi)
     else:
-        pass
+        logging.error("[-] Type of Tagged Template Expression is error! ")
 
 def analysis_UnaryExpression(self, block):
     argument = block["argument"]
@@ -1405,8 +1599,11 @@ def analysis_ObjectExpression(self, block, f=0):
             "native": False
         }
         if (self.scope_id[1], (_name, block)) not in self.scope_list:
-            self.scope_list.append((self.scope_id[1], (_name, block)))
+            if _key not in self.scopes[self.module_name]:
+                self.scopes[self.module_name][_key] = dict()
+            self.scope_id = _key
             p_list = self.analysis_ObjectExpression(block, f=1)
+            self.scope_id = _sid
             if p_list:
                 self.scopes[self.module_name][_sid][_key]["edge"].extend(p_list)
         self.func_id[(block["start"], block["end"])] = f"{_name}@{self.module_name}, {block['loc']['start']['line']}"
@@ -1446,11 +1643,13 @@ def analysis_ObjectExpression(self, block, f=0):
                                 property["value"]["type"] == "FunctionExpression" or \
                                 property["value"]["type"] == "CallExpression" or \
                                 property["value"]["type"] == "ArrayExpression":
+                            self.analysis_Expression(property["value"],property["value"]["type"])
                             props[_key]["blck"] = [property["value"], ]
                         elif property["value"]["type"] == "ObjectExpression":
                             props[_key]["type"] = "obj"
                             props[_key]["prop"] = dict()
                             props[_key]["blck"] = [property["value"], ]
+                            self.analysis_Expression(property["value"],property["value"]["type"])
                         elif property["value"]["type"] == "Literal" or \
                                 property["value"]["type"] == "BinaryExpression" or \
                                 property["value"]["type"] == "LogicalExpression" or \
@@ -1461,25 +1660,26 @@ def analysis_ObjectExpression(self, block, f=0):
                         elif property["value"]["type"] == "TemplateLiteral":
                             self.analysis_TemplateLiteral(property["value"])
                         else:
-                            pass
+                            logging.error(f"property value type error~")
                     r_list.append((self.module_name, (self.scope_id, _key)))
                 elif property["key"]["type"] == "Literal":
                     pass
                 elif property["key"]["type"] == "MemberExpression":
                     pass
                 else:
-                    pass
+                    logging.error("property key type error~")
             elif property["type"] == "SpreadElement":
                 p_list = self.analysis_SpreadElement(property)
                 r_list.extend(p_list)
             else:
-                pass
+                logging.error(f"property type error~")
         return r_list
 
 def analysis_Identifier(self, block):
-
-    if str(block) in self.analysis_Identifier_dict:
-        return self.analysis_Identifier_dict[str(block)]
+    block_source_code = self.get_source_code(self.module_name, block)
+    if self.stage == "inter" and (str(block) in self.analysis_Identifier_dict):
+        if self.analysis_Identifier_dict[str(block)]:
+            return self.analysis_Identifier_dict[str(block)]
 
     sid = self.scope_id
     block_start = block["start"]
@@ -1499,7 +1699,7 @@ def analysis_Identifier(self, block):
                     node_edge_list = node["edge"]
                     node_start_line = node["loc"]["start"]["line"]
                     if node_type in ["var", "obj", "obj_mem"]:
-                        if block_start_line > node_start_line or _key in self.scopes[self.module_name]:
+                        if block["start"] > node["start"] or _key in self.scopes[self.module_name]:
                             found_list.append((self.module_name, (sid, (key, _key))))
                         for node_edge in node_edge_list:
                             if node_edge[0] in ["undefined", "primordials", "binding", ]:
@@ -1525,42 +1725,42 @@ def analysis_Identifier(self, block):
                             found_list.append((self.module_name, (sid, (key, _key))))
         else:
             nodes = self.scopes[self.module_name][sid]
-            for _key in nodes:
-                if block["name"] == _key[1][0]:
-                    node = nodes[_key]
-                    node_type = node["type"]
-                    node_edge_list = node["edge"]
-                    node_start_line = node["loc"]["start"]["line"]
-                    if node_type in ["var", "obj", "obj_mem"]:
-                        if block_start_line > node_start_line or _key in self.scopes[self.module_name]:
-                            found_list.append((self.module_name, (sid, _key)))
-                        for node_edge in node_edge_list:
-                            if not node_edge[0]:
-                                continue
-                            if node_edge[0] == "internalBinding" or node_edge[0] in self.builtins:
-                                found_list.append(node_edge, )
-                                continue
-                            if node_edge[0] in ["undefined", "primordials", "binding", ]:
-                                continue
-                            if node_edge[-1] in ["func", "obj"]:
-                                _t = node_edge[-1]
-                                node_edge = node_edge[0]
-                                if node_edge[1][1][0] in ["this", "prop"]:
-                                    p_node = self.scopes[node_edge[0]][node_edge[1][0]][node_edge[1][1][0]][node_edge[1][1][1]]
-                                else:
-                                    p_node = self.scopes[node_edge[0]][node_edge[1][0]][node_edge[1][1]]
-                                p_node[_t] = True
+            _key = key
+            if block["name"] == _key[1][0]:
+                node = nodes[_key]
+                node_type = node["type"]
+                node_edge_list = node["edge"]
+                node_start_line = node["loc"]["start"]["line"]
+                if node_type in ["var", "obj", "obj_mem"]:
+                    if block["start"] > node["start"] or _key in self.scopes[self.module_name]:
+                        found_list.append((self.module_name, (sid, _key)))
+                    for node_edge in node_edge_list:
+                        if not node_edge[0]:
+                            continue
+                        if node_edge[0] == "internalBinding" or node_edge[0] in self.builtins:
+                            found_list.append(node_edge, )
+                            continue
+                        if node_edge[0] in ["undefined", "primordials", "binding", ]:
+                            continue
+                        if node_edge[-1] in ["func", "obj"]:
+                            _t = node_edge[-1]
+                            node_edge = node_edge[0]
+                            if node_edge[1][1][0] in ["this", "prop"]:
+                                p_node = self.scopes[node_edge[0]][node_edge[1][0]][node_edge[1][1][0]][node_edge[1][1][1]]
                             else:
-                                if node_edge[1][1][0] in ["this", "prop"]:
-                                    p_node = self.scopes[node_edge[0]][node_edge[1][0]][node_edge[1][1][0]][node_edge[1][1][1]]
-                                else:
-                                    p_node = self.scopes[node_edge[0]][node_edge[1][0]][node_edge[1][1]]
-                            if p_node["type"] in ["func", "class"]:
-                                found_list.append((self.module_name, (sid, _key)))
-
-                    elif node_type in ["func", "class", "param", "index", "literal"]:
-                        if block_start != _key[1][1][0]:
+                                p_node = self.scopes[node_edge[0]][node_edge[1][0]][node_edge[1][1]]
+                            p_node[_t] = True
+                        else:
+                            if node_edge[1][1][0] in ["this", "prop"]:
+                                p_node = self.scopes[node_edge[0]][node_edge[1][0]][node_edge[1][1][0]][node_edge[1][1][1]]
+                            else:
+                                p_node = self.scopes[node_edge[0]][node_edge[1][0]][node_edge[1][1]]
+                        if p_node["type"] in ["func", "class"]:
                             found_list.append((self.module_name, (sid, _key)))
+
+                elif node_type in ["func", "class", "param", "index", "literal"]:
+                    if block_start != _key[1][1][0]:
+                        found_list.append((self.module_name, (sid, _key)))
     up_scope = sid[0]
     change_flag = 0 
     found_scope_list = list()
@@ -1589,7 +1789,7 @@ def analysis_Identifier(self, block):
                                 node_edge_list = node["edge"]
                                 node_start_line = node["loc"]["start"]["line"]
                                 if node_type in ["var", "obj", "obj_mem"]:
-                                    if block_start_line > node_start_line or _key in self.scopes[self.module_name]:
+                                    if block["start"] > node["start"] or _key in self.scopes[self.module_name]:
                                         found_list.append((self.module_name, (sid, (key, _key))))
                                     for node_edge in node_edge_list:
                                         if node_edge[0] in ["undefined", "primordials", "binding", ]:
@@ -1614,13 +1814,14 @@ def analysis_Identifier(self, block):
                                     if block_start != _key[1][1][0]:
                                         found_list.append((self.module_name, (sid, (key, _key))))
                     else:
-                        if block["name"] == key[1][0]:
+                        node__node = self.scopes[self.module_name][sid][key]
+                        if block["name"] == key[1][0] or key[1][0].endswith(block["name"]):
                             node = self.scopes[self.module_name][sid][key]
                             node_type = node["type"]
                             node_edge_list = node["edge"]
                             node_start_line = node["loc"]["start"]["line"]
-                            if node_type in ["var", "obj", "obj_mem"]:
-                                if block_start_line > node_start_line or key in self.scopes[self.module_name]:
+                            if node_type in ["var", "obj", "obj_mem", "mem"]:
+                                if block["start"] > node["start"] or key in self.scopes[self.module_name]:
                                     found_list.append((self.module_name, (sid, key)))
                                 for node_edge in node_edge_list:
                                     if not node_edge[0]:
@@ -1674,6 +1875,7 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
         _object = _object["object"]
         work_list.append(_property)
     work_list.append(_object)
+
     node = work_list.pop()
     node_type = node["type"]
 
@@ -1699,7 +1901,7 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                 else:
                     pass
             else:
-                pass
+                logging.error("module name value error")
         elif node["callee"]["type"] == "MemberExpression":
             self.push_module_scopeid_stack()
             p_list.extend(self.analysis_memberexpression_pointer(node["callee"], call_p=call_p))
@@ -1738,55 +1940,36 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                                 if return_p_list:
                                     p_list.extend(return_p_list)
                                 else:
-                                    pass
+                                    logging.error("TO-DO")
                             else:
-                                pass
+                                logging.error(f"callee_edge_node_range not in function table {callee_edge}")
                         else:
-                            pass
+                            logging.error(f"callee egde not in function table")
                     elif callee_edge_node_type == "obj":
                         p_list.append(callee_edge)
                     else:
-                        pass
+                        logging.error(f"callee edge node type error {callee_edge_node_type}")
                 p_list.extend(return_list)
     elif node_type == "Identifier":
         p_list.extend(self.analysis_Identifier(node))
     elif node_type == "ThisExpression":
-        this_p = self.scope_id
-        while this_p[1][0] != "global":
-            for this_p_key in self.scopes[self.module_name][this_p]:
-                if this_p_key in ["this", "prop"]:
-                    this_p_nodes = self.scopes[self.module_name][this_p][this_p_key]
-                    for _key in this_p_nodes:
-                        this_p_node = this_p_nodes[_key]
-                        if "name" in work_list[-1]:
-                            if _key[1][0] == work_list[-1]["name"]:
-                                if this_p_node["loc"]["start"]["line"] >= work_list[-1]["loc"]["start"]["line"]:
-                                    continue
-                                p_list.append((self.module_name, (this_p, (this_p_key, _key))))
-                        else:
-                            pass
-                if "name" in work_list[-1]:
-                    if this_p_key[1][0] == work_list[-1]["name"]:
-                        this_p_node = self.scopes[self.module_name][this_p][this_p_key]
-                        if this_p_node["loc"]["start"]["line"] >= work_list[-1]["loc"]["start"]["line"]:
-                            continue
-                        p_list.append((self.module_name, (this_p, this_p_key)))
-                else:
-                    pass
-            old_scope_id = this_p
-            for _scope_id in self.scopes[self.module_name]:
-                if _scope_id[1] == this_p[0]:
-                    this_p = _scope_id
-                    break
-            if old_scope_id == this_p:
-                break
-        if p_list:
-            work_list.pop()
+        if work_list[-1]["type"] == "Identifier":
+            p_list.extend(self.analysis_Identifier(work_list[-1]))
+        work_list.pop()
+    elif node_type == "FunctionExpression":
+        if work_list[-1]["type"] == "Identifier":
+            if work_list[-1]["name"] == "call":
+                work_list.pop()
+                _name = "anonymous"
+                if node["id"]:
+                    _name = node["id"]["name"]
+                node_p = (self.scope_id[1], (_name, (node["start"], node["end"])))
+                tmp = self.scopes[self.module_name][self.scope_id][node_p]
+                r_list.append((self.module_name, (self.scope_id, node_p)))     
     else:
-        pass
+        logging.error(f"module name value error2 {node_type}")
 
     if len(work_list) > 1:
-        pass
         while len(work_list) > 1:
             node = work_list.pop()
             if node["type"] == "Literal":
@@ -1808,7 +1991,7 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                             new_p_list.append(tuple(new_p))
                             continue
                         else:
-                            pass
+                            logging.error(f"node type error {node['type']}")
                 if p[-1] in ["func", "obj"]:
                     _t = p[-1]
                     p = p[0]
@@ -1829,19 +2012,24 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                 p_edge_list = p_node["edge"]
                 p_blck = p_node["blck"]
                 if p_type == "var":
-                    if not p_edge_list and p_blck:
-                        for _blck in p_blck:
-                            if _blck["type"] == "ThisExpression":
-                                if node["type"] == "Identifier":
-                                    new_p_list.extend(self.analysis_Identifier(node))
+                    if len(p_edge_list) < 20:
+                        if not p_edge_list and p_blck:
+                            for _blck in p_blck:
+                                if _blck["type"] == "ThisExpression":
+                                    if node["type"] == "Identifier":
+                                        new_p_list.extend(self.analysis_Identifier(node))
+                                    else:
+                                        logging.error("this next node type error~")
                                 else:
-                                    pass
-                            else:
-                                _blck_p_list = self.analysis_Expression(_blck, _blck["type"], f=f, p=p)
-                                if _blck_p_list:
-                                    p_edge_list.extend(_blck_p_list)
-                    if p_edge_list:
-                        p_list.extend(p_edge_list)
+                                    self.push_module_scopeid_stack()
+                                    self.module_name = p[0]
+                                    self.scope_id = p[1][0]
+                                    _blck_p_list = self.analysis_Expression(_blck, _blck["type"], f=f, p=p)
+                                    if _blck_p_list:
+                                        p_edge_list.extend(_blck_p_list)
+                                    self.pop_module_scopeid_stack()
+                        if p_edge_list:
+                            p_list.extend(p_edge_list)
                 elif p_type in ["func", "class"]:
                     if not p_edge_list and p_blck:
                         for _blck in p_blck:
@@ -1884,7 +2072,7 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                                                 if _key[1][0] == node["name"]:
                                                     new_p_list.append((callee_edge[0], (callee_edge[1][1], ("this", _key))))
                                             else:
-                                                pass
+                                                logging.error("this next node type error~")
                                     if "prop" in self.scopes[callee_edge[0]][callee_edge[1][1]]:
                                         for _key in self.scopes[callee_edge[0]][callee_edge[1][1]]["prop"]:
                                             if _key[1][0] == node["name"]:
@@ -1900,15 +2088,15 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                                         if return_p_list:
                                             p_list.extend(return_p_list)
                                         else:
-                                            pass
+                                            logging.error("TO-DO")
                                     else:
-                                        pass
+                                        logging.error(f"callee_edge_node_range not in function table {callee_edge}")
                                 else:
-                                    pass
+                                    logging.error(f"callee egde not in function table")
                             elif callee_edge_node_type == "obj":
                                 p_list.append(callee_edge)
                             else:
-                                pass
+                                logging.error(f"callee edge node type error {callee_edge_node_type}")
                         p_list.extend(return_list)
                 elif p_type == "obj":
                     if p[1][1] in self.scopes[p[0]]:
@@ -1932,12 +2120,12 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                                 else:
                                     p_list.append(p_edge)
                         else:
-                            pass
+                            logging.error("TO-DO")
                 elif p_type == "param":
                     if call_p not in self.scopes[p[0]][p[1][0]][p[1][1]]["mem"]:
                         self.scopes[p[0]][p[1][0]][p[1][1]]["mem"].append(call_p)
                 else:
-                    pass
+                    logging.error(f"p type error {p_type}")
                 
             p_list = new_p_list
                 
@@ -1974,7 +2162,7 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                             r_list.append(tuple(new_p))
                             continue
                         else:
-                            pass
+                            logging.error(f"node type error {node['type']}")
 
                 if self.aim == "internal":
                     if p[0] == "internalBinding":
@@ -1984,7 +2172,7 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                             r_list.append(tuple(new_p))
                             continue
                         else:
-                            pass
+                            logging.error(f"node type error {node['type']}")
                 if p[-1] in ["func", "obj"]:
                     _t = p[-1]
                     p = p[0]
@@ -2011,11 +2199,15 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                                 if node["type"] == "Identifier":
                                     r_list.extend(self.analysis_Identifier(node))
                                 else:
-                                    pass
+                                    logging.error("this next node type error~")
                             else:
+                                self.push_module_scopeid_stack()
+                                self.module_name = p[0]
+                                self.scope_id = p[1][0]
                                 _blck_p_list = self.analysis_Expression(_blck, _blck["type"], f=f, p=p)
                                 if _blck_p_list:
                                     p_edge_list.extend(_blck_p_list)
+                                self.pop_module_scopeid_stack()
                     if p[1][1] in self.scopes[p[0]]:
                         for _key in self.scopes[p[0]][p[1][1]]:
                             if _key in ["prop", "this"]:
@@ -2052,12 +2244,12 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                         for callee_edge in callee_edge_list:
                             if callee_edge[0] in ["undefined", "primordials", "binding", "internalBinding"]:
                                 continue
-                            if self.aim == "built-in":
-                                if callee_edge[0] in self.builtins:
-                                    new_p = list(callee_edge)
-                                    new_p.append(node["name"])
-                                    r_list.append(tuple(new_p))
-                                    continue
+                            # if self.aim == "built-in":
+                            if callee_edge[0] in self.builtins:
+                                new_p = list(callee_edge)
+                                new_p.append(node["name"])
+                                r_list.append(tuple(new_p))
+                                continue
                             callee_edge_node = self.scopes[callee_edge[0]][callee_edge[1][0]][callee_edge[1][1]]
                             callee_edge_node_type = callee_edge_node["type"]
                             if callee_edge_node_type in ["func", "class", "var"]:
@@ -2083,49 +2275,49 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                                         if return_p_list:
                                             p_list.extend(return_p_list)
                                         else:
-                                            pass
+                                            logging.error("TO-DO")
                                     else:
-                                        pass
+                                        logging.error(f"callee_edge_node_range not in function table {callee_edge}")
                                 else:
-                                    pass
+                                    logging.error(f"callee egde not in function table")
                             elif callee_edge_node_type == "obj":
                                 p_list.append(callee_edge)
                             else:
-                                pass
+                                logging.error(f"callee edge node type error {callee_edge_node_type}")
                         p_list.extend(return_list)
                 elif p_type == "obj":
                     if p[1][1] in self.scopes[p[0]]:
                         for key in self.scopes[p[0]][p[1][1]]:
                             if key[1][0] == node["name"]:
                                 r_list.append((p[0], (p[1][1], key)))
-                    else:
-                        if p_edge_list:
-                            for p_edge in p_edge_list:
-                                if p_edge[0] in self.builtins:
-                                    r_list.append(p_edge)
-                                    continue
-                                if p_edge[1][1][0] in ["this", "prop"]:
-                                    __p_node = self.scopes[p_edge[0]][p_edge[1][0]][p_edge[1][1][0]][p_edge[1][1][1]]
-                                else:
-                                    __p_node = self.scopes[p_edge[0]][p_edge[1][0]][p_edge[1][1]]
+                    # else:
+                    if p_edge_list:
+                        for p_edge in p_edge_list:
+                            if p_edge[0] in self.builtins:
+                                r_list.append(p_edge)
+                                continue
+                            if p_edge[1][1][0] in ["this", "prop"]:
+                                __p_node = self.scopes[p_edge[0]][p_edge[1][0]][p_edge[1][1][0]][p_edge[1][1][1]]
+                            else:
+                                __p_node = self.scopes[p_edge[0]][p_edge[1][0]][p_edge[1][1]]
 
-                                if __p_node["type"] in ["func"]:
-                                    r_list.append(p_edge)
-                                if p_edge[1][1] in self.scopes[p_edge[0]]:
-                                    for key in self.scopes[p_edge[0]][p_edge[1][1]]:
-                                        if key[1][0] == node["name"]:
-                                            r_list.append((p_edge[0], (p_edge[1][1], key)))
-                                else:
-                                    p_list.append(p_edge)
-                        else:
-                            pass
+                            if __p_node["type"] in ["func"]:
+                                r_list.append(p_edge)
+                            if p_edge[1][1] in self.scopes[p_edge[0]]:
+                                for key in self.scopes[p_edge[0]][p_edge[1][1]]:
+                                    if key[1][0] == node["name"]:
+                                        r_list.append((p_edge[0], (p_edge[1][1], key)))
+                            else:
+                                p_list.append(p_edge)
+                    else:
+                        logging.error("TO-DO")
                 elif p_type == "param":
                     if call_p not in self.scopes[p[0]][p[1][0]][p[1][1]]["mem"]:
                         self.scopes[p[0]][p[1][0]][p[1][1]]["mem"].append(call_p)
                 elif p_type == "rtrn":
                     p_list.extend(p_edge_list)
                 else:
-                    pass
+                    logging.error(f"p type error {p_type}")
 
             if not r_list:
                 if node["name"] in self.native_methods:
@@ -2153,7 +2345,7 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                                 argument_node_blck = argument_node["blck"]
                                 if not argument_node_edge_list and argument_node_blck:
                                     for _blck in argument_node_blck:
-                                        pass
+                                        logging.error(f'heeeeeeeere {_blck["type"]}')
                                 else:
                                     if argument_node_edge_list:
                                         for argument_node_edge in argument_node_edge_list:
@@ -2180,20 +2372,20 @@ def analysis_memberexpression_pointer(self, block, call_p=None, f=1):
                                             if argument_node_edge_node_type == "func":
                                                 argument_node["self"] = True
                                             else:
-                                                pass
+                                                logging.error(f"argument_node_edge_node_type type error {argument_node_edge_node_type}")
 
                     else:
-                        pass
+                        logging.error("call p error")
         elif node_type == "Literal":
             if p_list:
                 r_list.extend(p_list)
         else:
-            pass
+            logging.error(f"node type error {node_type}")
     else:
         if p_list:
             self.total_call_mem_expression.pop()
             return p_list
         else:
-            pass
+            logging.warn(f"work list length error")
     self.total_call_mem_expression.pop()
     return r_list
