@@ -1,0 +1,16 @@
+{
+  "id": "",
+  "dependencies": {
+    "open": "0.0.5"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/npm:open:20180512",
+    "source2": "https://github.com/advisories/GHSA-28xh-wpgr-7fm8"
+  },
+  "fixedVersion": "6.0.0",
+  "fixCommit": "",
+  "sink": "lib/open.js:58:10",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

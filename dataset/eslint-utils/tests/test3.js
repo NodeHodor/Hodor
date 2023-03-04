@@ -67,7 +67,7 @@ for (const key of Object.keys(expectedResults)) {
         ":function"(node) {
             actualLoc = getFunctionHeadLocation(
                 node,
-                context.getSourceCode(),
+                context.getSourceCode()
             )
         },
     }))
@@ -77,7 +77,7 @@ for (const key of Object.keys(expectedResults)) {
             rules: { test: "error" },
         },
         "test.js",
-        true,
+        true
     )
 
 }

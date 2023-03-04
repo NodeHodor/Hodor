@@ -1,5 +1,10 @@
 {
   "dependencies": {
-    "is-my-json-valid": "^2.20.0"
+    "is-my-json-valid": "^2.20.0",
+    "ramda": "^0.29.0",
+    "tape": "^5.6.3"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

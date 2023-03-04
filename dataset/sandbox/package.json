@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "sandbox": "^0.7.0"
+  },
+  "scripts": {
+    "test": "node test2.js"
   }
 }

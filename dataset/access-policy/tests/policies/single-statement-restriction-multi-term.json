@@ -1,0 +1,14 @@
+{
+    "statements": [
+        {
+            "action": "*",
+            "resource": "/user/${user.id}",
+            "restriction": {
+                "equals": {
+                    "user_id": "${user.id}",
+                    "active": true
+                }
+            }
+        }
+    ]
+}

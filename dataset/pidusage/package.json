@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2017-16034",
+  "dependencies": {
+    "pidusage": "1.0.0"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/npm:pidusage:20170605",
+    "source2": "https://github.com//advisories/GHSA-hfq9-rfpv-j8r8"
+  },
+  "fixedVersion": "1.1.5",
+  "fixCommit": "https://github.com/soyuka/pidusage/commit/b70eca15f7ca7f1b82a15f8a5d4bb48737f5a89d",
+  "sink": "lib/stats.js:108:5",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

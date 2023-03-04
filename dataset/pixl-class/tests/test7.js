@@ -14,8 +14,8 @@ var Sleeper = Class.create({
 
 var snooze = new Sleeper();
  
-async function main() {
-    await snooze.sleep( 1000 ); // waits for 1 second here
+function main() {
+    snooze.sleep( 1000 ); // waits for 1 second here
     console.log("This happened 1 second later!");
 };
  

@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "rpi": "^0.0.3"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

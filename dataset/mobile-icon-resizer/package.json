@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "mobile-icon-resizer": "^0.4.2"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

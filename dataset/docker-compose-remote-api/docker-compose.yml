@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+    test:
+        image: ubuntu
+        networks: 
+            - default
+        ports:
+            - "8000:8000"
+        build:
+            context: .
+            dockerfile: Dockerfile

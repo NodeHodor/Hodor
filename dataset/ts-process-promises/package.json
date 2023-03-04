@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2020-7784",
+  "dependencies": {
+    "ts-process-promises": "1.0.2"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-TSPROCESSPROMISES-1048334",
+    "source2": "https://github.com/advisories/GHSA-ww4j-c2rq-47q8"
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "lib/process-promises.js:45:31",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

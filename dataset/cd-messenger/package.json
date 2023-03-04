@@ -1,5 +1,9 @@
 {
   "dependencies": {
     "cd-messenger": "^2.7.26"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
+
 }

@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "roar-pidusage": "^1.1.4"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

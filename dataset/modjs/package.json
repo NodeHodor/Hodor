@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "modjs": "^0.4.8"
+  },
+  "scripts": {
+    "test": "node tests/test1.js"
   }
 }

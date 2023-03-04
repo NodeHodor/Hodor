@@ -1,0 +1,21 @@
+{
+  "id": "CVE-2021-26275",
+  "dependencies": {
+    "eslint-fixer": "0.1.5"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-ESLINTFIXER-1087438",
+    "source2": "https://github.com/advisories/GHSA-45w5-pvr8-4rh5"
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "index.js:24:18",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "eslint": "^8.37.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

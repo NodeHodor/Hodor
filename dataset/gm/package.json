@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2015-7982",
+  "dependencies": {
+    "gm": "1.20.0"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/npm:gm:20151026",
+    "source2": "https://github.com/advisories/GHSA-pjh3-jv7w-9jpr"
+  },
+  "fixedVersion": "=1.20.0",
+  "fixCommit": "n/a",
+  "sink": "lib/compare.js:72:5",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

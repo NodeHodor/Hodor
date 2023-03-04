@@ -1,0 +1,15 @@
+{
+  "all": true,
+  "include": [
+    "node_modules/**"
+  ], 
+  "exclude": [
+    "**/.cache/**",
+    "**/test/**",
+    "**/eslint-visitor-keys/**",
+    "**/eslint-scope/**"
+  ],
+  "check-coverage": true,
+  "excludeNodeModules": false
+}
+

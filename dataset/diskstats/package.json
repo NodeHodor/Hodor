@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2018-16462",
+  "dependencies": {
+    "diskstats": "0.0.2"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-DISKSTATS-590099",
+    "source2": "https://github.com/advisories/GHSA-9jm3-5835-537m"
+  },
+  "fixedVersion": "2.0.1",
+  "fixCommit": "https://github.com/vincentmorneau/apex-publish-static-files/commit/2209af8f2b65c24aa55ab757e0e05b958c16f063",
+  "sink": "lib/stat.js:44:22",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

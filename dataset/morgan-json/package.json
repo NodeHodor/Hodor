@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "morgan-json": "^1.1.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

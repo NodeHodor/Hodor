@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "end-of-stream": "^1.4.4",
+    "mutate-fs": "^2.1.1",
+    "nock": "^13.3.0",
+    "tap": "^16.3.4",
     "tar": "^6.0.0"
+  },
+  "scripts": {
+    "test": "node test6.js"
   }
 }

@@ -24,18 +24,18 @@ dangerous_syscall_set = {
     # "unlink"
     }
 
-with open("/home/nodejs/dataset/test/node_callgraph_evaluation/result/result.glibc.origin.json") as f_r:
+with open("{your_dataset_path}/test/node_callgraph_evaluation/result/result.glibc.origin.json") as f_r:
     glibc = json.load(f_r)
 
 
-with open("/home/nodejs/dataset/test/node_callgraph_evaluation/result/result.origin.json") as f_r:
+with open("{your_dataset_path}/test/node_callgraph_evaluation/result/result.origin.json") as f_r:
 
     musl = json.load(f_r)
 
-with open("/home/nodejs/dataset/test/node_callgraph_evaluation/result/result.final.json") as f_r:
+with open("{your_dataset_path}/test/node_callgraph_evaluation/result/result.final.json") as f_r:
     changable = json.load(f_r)
 
-with open("/home/nodejs/dataset/test/builtin_js.json", "r") as f_r:
+with open("{your_dataset_path}/test/builtin_js.json", "r") as f_r:
     builtin_js_dict = json.load(f_r)
 
 main_set = {

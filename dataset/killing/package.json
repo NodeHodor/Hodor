@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2021-23381",
+  "dependencies": {
+    "killing": "1.0.6"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-KILLING-1078532",
+    "source2": "https://github.com/advisories/GHSA-cq77-8jpx-892g"
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "lib/killing.js:35:7",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

@@ -1,0 +1,26 @@
+[
+  [
+    "warn",
+    "TAR_ENTRY_INVALID",
+    "path is required"
+  ],
+  [
+    "warn",
+    "TAR_ENTRY_INVALID",
+    "checksum failure"
+  ],
+  [
+    "nullBlock"
+  ],
+  [
+    "eof"
+  ],
+  [
+    "warn",
+    "TAR_BAD_ARCHIVE",
+    "Unrecognized archive format"
+  ],
+  [
+    "end"
+  ]
+]

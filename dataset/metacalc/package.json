@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "metacalc": "^0.0.1"
+  },
+  "scripts": {
+    "test": "node test2.js"
   }
 }

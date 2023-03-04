@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "enpeem": "^2.2.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

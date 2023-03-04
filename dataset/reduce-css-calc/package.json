@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "reduce-css-calc": "^1.2.4"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

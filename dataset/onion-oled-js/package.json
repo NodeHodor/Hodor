@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2021-23377",
+  "dependencies": {
+    "onion-oled-js": "0.0.2"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-ONIONOLEDJS-1078808",
+    "source2": "https://github.com/advisories/GHSA-rhwp-9vm9-547q"
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "src/oled-exp.js:91:16",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

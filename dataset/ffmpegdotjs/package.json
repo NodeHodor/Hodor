@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2021-23376",
+  "dependencies": {
+    "ffmpegdotjs": "0.0.4"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-FFMPEGDOTJS-1078542",
+    "source2": "https://github.com/advisories/GHSA-f39r-cpmj-whcg"
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "index.js:191:9",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

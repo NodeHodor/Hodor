@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "mol-proto": "^0.1.15"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

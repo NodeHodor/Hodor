@@ -46,7 +46,7 @@ var Bear = Class.create({
         // invoke superclass constructor to set name and color
         Animal.call(this, new_name, new_color);
         this.wants = new_wants;
-    }
+    },
     
     // and a new method
     roar: function() {

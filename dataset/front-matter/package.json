@@ -1,5 +1,10 @@
 {
   "dependencies": {
     "front-matter": "^2.1.2"
-  }
-}
+  },
+  "devDependencies": {
+    "coverage-node": "^8.0.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
+  }}

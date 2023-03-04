@@ -1,0 +1,2 @@
+{your_dataset_path}/clamscan/good_scan_dir/good_file_1.txt
+{your_dataset_path}/clamscan/good_scan_dir/good_file_2.txt

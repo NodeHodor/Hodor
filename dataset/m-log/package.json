@@ -1,5 +1,12 @@
 {
   "dependencies": {
     "m-log": "^0.0.1"
+  },
+  "devDependencies": {
+    "coverage-node": "^8.0.0",
+    "nyc": "^15.1.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

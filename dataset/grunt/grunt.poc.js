@@ -1,4 +1,4 @@
 var grund = require('grunt');
 
-console.log(grund.file.readYAML('/home/nodejs/dataset/grunt/test.yaml'));
+console.log(grund.file.readYAML('{your_dataset_path}/grunt/test.yaml'));
 

@@ -1,5 +1,10 @@
 {
   "dependencies": {
-    "access-policy": "^3.1.0"
+    "access-policy": "^3.1.0",
+    "describe": "^1.2.0",
+    "mocha": "^10.2.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

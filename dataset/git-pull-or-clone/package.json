@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "git-pull-or-clone": "^2.0.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

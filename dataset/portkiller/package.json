@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2021-23379",
+  "dependencies": {
+    "portkiller": "1.0.2"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-PORTKILLER-1078537",
+    "source2": "https://github.com/advisories/GHSA-r6fw-8m27-43c9"
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "index.js:10:5",
+  "scripts": {
+    "test": "node test1.js 8001"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2020-7636",
+  "dependencies": {
+    "git-tags-remote": "1.0.2"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-GITTAGSREMOTE-596503",
+    "source2": "https://github.com/advisories/GHSA-4m6q-rxhm-675w"
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "index.js:5:2",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

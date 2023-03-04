@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "mongodb-query-parser": "^1.4.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

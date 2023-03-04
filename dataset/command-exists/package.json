@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2019-10776",
+  "dependencies": {
+    "command-exists": "1.2.2"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/npm:command-exists:20180512",
+    "source2": "https://github.com/advisories/GHSA-84cm-v6jp-gjmr"
+  },
+  "fixedVersion": "0.22.2",
+  "fixCommit": "https://github.com/kellyselden/git-diff-apply/commit/106d61d3ae723b4257c2a13e67b95eb40a27e0b5",
+  "sink": "lib/command-exists.js:78:22",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

@@ -1,0 +1,17 @@
+{
+    "statements": [
+        {
+            "action": "*",
+            "resource": [
+                "/user/${user.id}/*"
+            ]
+        },
+        {
+            "effect": "deny",
+            "action": "*",
+            "resource": [
+                 "/user/${user.id}/bill"
+            ]
+        }
+    ]
+}

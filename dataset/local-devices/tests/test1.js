@@ -1,6 +1,11 @@
 // Without using a transpiler
 const find = require('local-devices');
 
+setTimeout(() => {
+    console.log("Delayed for 1 second.");
+    process.exit();
+}, 100)
+
 // Find all local network devices.
 find().then(devices => {
   devices /*

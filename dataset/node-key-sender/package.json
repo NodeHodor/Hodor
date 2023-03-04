@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "node-key-sender": "^1.0.10"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

@@ -2,5 +2,8 @@
   "dependencies": {
     "pulverizr": "^0.7.0",
     "q": "^1.5.1"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

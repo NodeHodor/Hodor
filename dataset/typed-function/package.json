@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "typed-function": "^0.10.5"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

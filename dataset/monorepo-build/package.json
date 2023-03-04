@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2020-28423",
+  "dependencies": {
+    "monorepo-build": "0.1.9"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-MONOREPOBUILD-1050392",
+    "source2": ""
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "lib/util/exec.js:4:54",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

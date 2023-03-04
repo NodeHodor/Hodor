@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "angular-expressions": "^1.0.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

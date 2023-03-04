@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "kill-by-port": "^0.0.1"
-  }
+  },
+ "scripts": {
+   "test": "node test1.js"
+ }
 }

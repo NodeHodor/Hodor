@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "git-interface": "^2.1.1"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

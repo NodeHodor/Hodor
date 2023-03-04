@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2020-7628",
+  "dependencies": {
+    "umount": "1.1.6"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-UMOUNT-564265",
+    "source2": "https://github.com/advisories/GHSA-6q48-vjq2-mwcj"
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "build/umount.js:52:24",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

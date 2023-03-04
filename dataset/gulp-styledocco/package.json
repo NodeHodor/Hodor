@@ -3,5 +3,8 @@
     "gulp": "^4.0.2",
     "gulp-styledocco": "^0.0.3",
     "safe-buffer": "^5.2.1"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

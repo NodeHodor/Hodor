@@ -1,0 +1,10 @@
+{
+    "statements": [
+        {
+            "action": ["get", "post"],
+            "resource": [
+                "/user/${user.id}"
+            ]
+        }
+    ]
+}

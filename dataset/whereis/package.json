@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2018-3772",
+  "dependencies": {
+    "whereis": "0.4.0"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/npm:whereis:20180401",
+    "source2": "https://github.com/advisories/GHSA-wjr4-2jgw-hmv8"
+  },
+  "fixedVersion": "0.4.1",
+  "fixCommit": "https://github.com/vvo/node-whereis/commit/0f64e3780235004fb6e43bfd153ea3e0e210ee2b",
+  "sink": "index.js:4:6",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}

@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "protojs": "^1.0.5"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

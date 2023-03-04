@@ -1,6 +1,11 @@
 {
   "dependencies": {
-    "eslint": "^8.15.0",
-    "eslint-utils": "^1.4.0"
+    "dot-prop": "^7.2.0",
+    "eslint": "^8.38.0",
+    "eslint-utils": "^1.4.0",
+    "semver": "^7.3.8"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

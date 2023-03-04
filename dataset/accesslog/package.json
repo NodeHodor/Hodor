@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "accesslog": "^0.0.2"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

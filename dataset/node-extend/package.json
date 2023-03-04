@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "node-extend": "^0.2.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

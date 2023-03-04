@@ -1,0 +1,11 @@
+{
+    "statements": [
+        {
+            "action": "*",
+            "resource": [
+                "/user/${user.id}",
+                "/user/${user.id}/*"
+            ]
+        }
+    ]
+}

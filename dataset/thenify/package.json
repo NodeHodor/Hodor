@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "thenify": "^3.3.0"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

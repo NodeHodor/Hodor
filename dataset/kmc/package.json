@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "kmc": "^1.0.1"
+    "kmc": "^1.2.2",
+    "uglify-js": "^3.17.4"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "node-serialize": "^0.0.4"
+    "node-serialize": "^0.0.4",
+    "should": "^13.2.3"
+  },
+  "scripts": {
+    "test": "node test1.js"
   }
 }

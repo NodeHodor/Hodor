@@ -21,45 +21,45 @@ function getVariable(code, selector, withString = null) {
 
 getVariable(
     "let a; foo(a)",
-    "CallExpression Identifier[name='a']",
+    "CallExpression Identifier[name='a']"
 )
 
 getVariable(
     "let a; if (b) { foo(a) }",
-    "CallExpression Identifier[name='a']",
+    "CallExpression Identifier[name='a']"
 )
 
 getVariable(
     "let a; function f() { foo(a) }",
-    "CallExpression Identifier[name='a']",
+    "CallExpression Identifier[name='a']"
 )
 
 getVariable(
     "let a; foo(a)",
     "CallExpression Identifier[name='a']",
-    "a",
+    "a"
 )
 
 getVariable(
     "let a; if (b) { foo(a) }",
     "CallExpression Identifier[name='a']",
-    "a",
+    "a"
 )
 
 getVariable(
     "let a; function f() { foo(a) }",
     "CallExpression Identifier[name='a']",
-    "a",
+    "a"
 )
 
 getVariable(
     "let a; function f() { foo(a) }",
     "CallExpression Identifier[name='a']",
-    "Object",
+    "Object"
 )
 
 getVariable(
     "let a; function f() { foo(a) }",
     "CallExpression Identifier[name='a']",
-    "x",
+    "x"
 )

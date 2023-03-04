@@ -1,0 +1,16 @@
+{
+  "id": "CVE-2020-7785",
+  "dependencies": {
+    "node-ps": "0.0.2"
+  },
+  "links": {
+    "source1": "https://security.snyk.io/vuln/SNYK-JS-NODEPS-1048335",
+    "source2": "https://github.com/advisories/GHSA-4rv9-5vc4-88cg"
+  },
+  "fixedVersion": "n/a",
+  "fixCommit": "n/a",
+  "sink": "lib/index.js:72:18",
+  "scripts": {
+    "test": "node test1.js"
+  }
+}
